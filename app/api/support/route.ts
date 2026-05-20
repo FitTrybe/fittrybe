@@ -321,9 +321,27 @@ export async function POST(req: NextRequest) {
     });
 
     if (internalErr) {
-      console.error("[Resend] Support email failed:", internalErr);
+      console.error("[Resend] Support email failed:", {
+        from: fromEmail,
+        to: SUPPORT_RECIPIENTS,
+        error: internalErr,
+      });
+      const isDev = process.env.NODE_ENV !== "production";
       return NextResponse.json(
-        { error: "We couldn't send your message right now. Please try again in a moment." },
+        {
+          error: "We couldn't send your message right now. Please try again in a moment.",
+          ...(isDev
+            ? {
+                debug: {
+                  from: fromEmail,
+                  to: SUPPORT_RECIPIENTS,
+                  resendError: internalErr,
+                  hint:
+                    "If `from` is onboarding@resend.dev, Resend's sandbox only delivers to your own account email — set RESEND_FROM_EMAIL to a verified-domain sender (e.g. \"Fittrybe <hello@fittrybe.co.uk>\") in .env.local and restart `next dev`.",
+                },
+              }
+            : {}),
+        },
         { status: 502 }
       );
     }

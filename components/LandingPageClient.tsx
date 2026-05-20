@@ -352,6 +352,7 @@ function Navbar() {
           <Link href="/sports" aria-label="Browse sports on Fittrybe" className="nav-link">Sports</Link>
           <Link href="/events" aria-label="View upcoming sports sessions" className="nav-link">Sessions</Link>
           <Link href="/blog" aria-label="Read the Fittrybe blog" className="nav-link">Blog</Link>
+          <Link href="/support" aria-label="Contact Fittrybe support" className="nav-link">Support</Link>
           <a href="/waitlist" aria-label="Join the Fittrybe waitlist for early access" className="nav-cta">Join Waitlist</a>
         </div>
 
@@ -384,6 +385,7 @@ function Navbar() {
         <Link href="/sports" className="nav-link" onClick={closeMenu} role="menuitem">Sports</Link>
         <Link href="/events" className="nav-link" onClick={closeMenu} role="menuitem">Sessions</Link>
         <Link href="/blog" className="nav-link" onClick={closeMenu} role="menuitem">Blog</Link>
+        <Link href="/support" className="nav-link" onClick={closeMenu} role="menuitem">Support</Link>
         <a href="/waitlist" className="nav-cta" onClick={closeMenu} role="menuitem">Join Waitlist</a>
       </div>
     </>
@@ -1311,6 +1313,7 @@ function Footer() {
             { label: "Sessions", href: "/events" },
             { label: "Blog", href: "/blog" },
             { label: "Join Waitlist", href: "/waitlist" },
+            { label: "Support", href: "/support" },
             { label: "Privacy Policy", href: "/privacy" },
             { label: "Terms of Use", href: "/terms" },
           ].map(link => (
