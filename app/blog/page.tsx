@@ -11,6 +11,7 @@ import { buildCanonicalUrl, seoConfig } from "@/lib/seo-config";
 import BlogCard from "@/components/BlogCard";
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
+import SmartDownloadLink from "@/components/SmartDownloadLink";
 
 const blogOGImage = `${seoConfig.siteUrl}/api/og?title=${encodeURIComponent(
   "The Fittrybe Blog"
@@ -71,12 +72,11 @@ export default async function BlogIndexPage() {
         >
           <Wordmark height={28} />
         </Link>
-        <Link
-          href="/waitlist"
+        <SmartDownloadLink
           className="text-sm font-medium px-4 py-2 rounded-full bg-[#B6FF00] text-black hover:bg-[#B6FF00]/90 transition-colors"
         >
-          Join Waitlist
-        </Link>
+          Get the App
+        </SmartDownloadLink>
       </nav>
 
       {/* Hero */}
@@ -117,12 +117,11 @@ export default async function BlogIndexPage() {
         <p className="text-white/60 mb-4 font-[family-name:var(--font-inter-tight)]">
           Ready to find your tribe?
         </p>
-        <Link
-          href="/waitlist"
+        <SmartDownloadLink
           className="inline-block px-8 py-4 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
         >
-          Join the Waitlist
-        </Link>
+          Get the App
+        </SmartDownloadLink>
       </section>
     </main>
   );

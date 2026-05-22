@@ -7,10 +7,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Wordmark } from "@/components/brand/Wordmark";
+import SmartDownloadLink from "@/components/SmartDownloadLink";
 
 export const metadata: Metadata = {
   title: "Page Not Found | Fittrybe",
-  description: "The page you're looking for doesn't exist. Head back to the home page or join the Fittrybe waitlist.",
+  description: "The page you're looking for doesn't exist. Head back to the home page or download the Fittrybe app.",
   robots: { index: false, follow: false },
 };
 
@@ -50,12 +51,11 @@ export default function NotFound() {
           >
             Back to Home
           </Link>
-          <Link
-            href="/waitlist"
+          <SmartDownloadLink
             className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-white/15 text-white/80 font-bold uppercase tracking-wide font-[family-name:var(--font-anton)] text-sm hover:bg-white/5 hover:text-white transition-colors"
           >
-            Join the Waitlist
-          </Link>
+            Get the App
+          </SmartDownloadLink>
         </div>
       </div>
     </main>

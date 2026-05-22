@@ -15,6 +15,7 @@ import {
 import EventCard from "@/components/EventCard";
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
+import SmartDownloadLink from "@/components/SmartDownloadLink";
 
 // Revalidate every 60 seconds so new sessions appear without a full rebuild
 export const revalidate = 60;
@@ -224,12 +225,11 @@ export default async function EventsIndexPage({
             >
               Blog
             </Link>
-            <Link
-              href="/waitlist"
+            <SmartDownloadLink
               className="text-sm font-medium px-4 py-2 rounded-full bg-[#B6FF00] text-black hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-inter-tight)]"
             >
-              Join Waitlist
-            </Link>
+              Get the App
+            </SmartDownloadLink>
           </div>
         </nav>
 
@@ -293,12 +293,11 @@ export default async function EventsIndexPage({
                   ? `No upcoming ${activeSport} sessions right now. Check back soon!`
                   : "No upcoming sessions right now. Check back soon!"}
               </p>
-              <Link
-                href="/waitlist"
+              <SmartDownloadLink
                 className="inline-block px-6 py-3 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] uppercase tracking-wide"
               >
-                Get notified when sessions drop
-              </Link>
+                Get the App
+              </SmartDownloadLink>
             </div>
           ) : (
             <>
@@ -372,12 +371,11 @@ export default async function EventsIndexPage({
           <p className="text-white/60 mb-4 font-[family-name:var(--font-inter-tight)]">
             Want to host your own session?
           </p>
-          <Link
-            href="/waitlist"
+          <SmartDownloadLink
             className="inline-block px-8 py-4 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
           >
-            Join Fittrybe — Host for Free
-          </Link>
+            Get the App — Host for Free
+          </SmartDownloadLink>
         </section>
       </main>
     </>

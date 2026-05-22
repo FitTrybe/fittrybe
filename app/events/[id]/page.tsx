@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
+import SmartDownloadLink from "@/components/SmartDownloadLink";
 import {
   buildSessionKeywords,
   buildSessionMetaDescription,
@@ -1054,14 +1055,13 @@ export default async function EventDetailPage({
             ) : isFull ? (
               <>
                 <p className="text-white/60 mb-4 font-[family-name:var(--font-inter-tight)]">
-                  This session is full. Join Fittrybe to get notified when spots open up.
+                  This session is full. Get the app to be notified when spots open up.
                 </p>
-                <Link
-                  href="/waitlist"
+                <SmartDownloadLink
                   className="inline-block px-8 py-3 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
                 >
-                  Join Fittrybe — Get Notified
-                </Link>
+                  Get the App — Get Notified
+                </SmartDownloadLink>
               </>
             ) : (
               <>
@@ -1073,12 +1073,11 @@ export default async function EventDetailPage({
                 <p className="text-white/40 text-sm mb-6 font-[family-name:var(--font-inter-tight)]">
                   Download the Fittrybe app to reserve your spot.
                 </p>
-                <Link
-                  href="/waitlist"
+                <SmartDownloadLink
                   className="inline-block px-8 py-3 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
                 >
-                  Join Fittrybe — Reserve Your Spot
-                </Link>
+                  Get the App — Reserve Your Spot
+                </SmartDownloadLink>
               </>
             )}
           </footer>

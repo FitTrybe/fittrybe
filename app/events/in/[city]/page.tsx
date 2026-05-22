@@ -11,6 +11,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
+import SmartDownloadLink from "@/components/SmartDownloadLink";
 import EventCard from "@/components/EventCard";
 import {
   citySlugToDisplay,
@@ -232,12 +233,11 @@ export default async function CityEventsPage({
             >
               All sessions
             </Link>
-            <Link
-              href="/waitlist"
+            <SmartDownloadLink
               className="text-sm font-medium px-4 py-2 rounded-full bg-[#B6FF00] text-black hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-inter-tight)]"
             >
-              Join Waitlist
-            </Link>
+              Get the App
+            </SmartDownloadLink>
           </div>
         </nav>
 
@@ -250,7 +250,7 @@ export default async function CityEventsPage({
           </h1>
           <p className="text-white/70 text-lg max-w-2xl mx-auto font-[family-name:var(--font-inter-tight)]">
             {events.length === 0
-              ? `No live sessions in ${cityName} right now. Join the waitlist and we'll ping you the moment one drops.`
+              ? `No live sessions in ${cityName} right now. Get the app and we'll ping you the moment one drops.`
               : `${events.length} upcoming grassroots session${events.length === 1 ? "" : "s"} in ${cityName}. Football, basketball, tennis and more — reserve your spot in one tap.`}
           </p>
         </header>
@@ -306,12 +306,11 @@ export default async function CityEventsPage({
               <p className="text-white/40 text-lg font-[family-name:var(--font-inter-tight)] mb-6">
                 No upcoming sessions in {cityName} right now.
               </p>
-              <Link
-                href="/waitlist"
+              <SmartDownloadLink
                 className="inline-block px-6 py-3 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] uppercase tracking-wide"
               >
-                Get notified
-              </Link>
+                Get the App
+              </SmartDownloadLink>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -378,12 +377,11 @@ export default async function CityEventsPage({
           <p className="text-white/60 mb-4 font-[family-name:var(--font-inter-tight)]">
             Want to host a session in {cityName}?
           </p>
-          <Link
-            href="/waitlist"
+          <SmartDownloadLink
             className="inline-block px-8 py-4 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
           >
-            Join Fittrybe — Host for Free
-          </Link>
+            Get the App — Host for Free
+          </SmartDownloadLink>
         </section>
       </main>
     </>

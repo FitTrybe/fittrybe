@@ -113,8 +113,9 @@ export const seoConfig = {
 
   // ─── App Store Links ────────────────────────────────────────────────────────
   appLinks: {
-    ios: "https://apps.apple.com/app/fittrybe",
-    android: "https://play.google.com/store/apps/details?id=com.fittrybe",
+    ios: "https://apps.apple.com/us/app/fittrybe/id6765941962",
+    android: "https://play.google.com/store/apps/details?id=com.fittrybe.app",
+    web: "https://fittrybe.app",
   },
 
   // ─── Verification Codes ─────────────────────────────────────────────────────
@@ -153,12 +154,12 @@ export const seoConfig = {
         description:
           "Fittrybe is a location-based social sports app. Discover real sports sessions near you, reserve your spot in one tap, and meet your tribe. Football, basketball, badminton, tennis and more.",
       },
-      waitlist: {
-        path: "/waitlist",
-        url: `${SITE_URL}/waitlist`,
-        title: "Join the Fittrybe Waitlist — Get Early Access",
+      download: {
+        path: "/download",
+        url: `${SITE_URL}/download`,
+        title: "Download Fittrybe — Available on iOS & Android",
         description:
-          "Be the first to play when Fittrybe launches in your city. Join the waitlist now and get early access to the social sports app that connects real players near you.",
+          "Get Fittrybe on the App Store or Google Play. Discover real sports sessions near you, reserve your spot, and meet your tribe. Football, basketball, tennis, badminton and more.",
       },
     };
   },

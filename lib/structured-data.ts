@@ -114,9 +114,14 @@ export function buildAppSchema() {
       "@type": "Offer",
       price: "0",
       priceCurrency: "GBP",
-      availability: "https://schema.org/PreOrder",
+      availability: "https://schema.org/InStock",
       priceValidUntil: "2026-12-31",
     },
+    downloadUrl: [
+      seoConfig.appLinks.ios,
+      seoConfig.appLinks.android,
+    ],
+    installUrl: seoConfig.appLinks.ios,
     // NOTE: aggregateRating intentionally omitted until we have real reviews.
     // Fake/self-issued ratings violate Google guidelines and can trigger a
     // manual action. Re-add via app store reviews / verified user surveys.
@@ -250,14 +255,14 @@ export const LANDING_FAQS = [
       "Yes — joining Fittrybe and browsing sessions is completely free. Some hosted sessions may have a small venue or organiser fee, but the app itself costs nothing to download and use.",
   },
   {
-    question: "When does Fittrybe launch?",
+    question: "Where can I download Fittrybe?",
     answer:
-      "Fittrybe is currently in pre-launch. Join the waitlist to get early access when we launch in your city. We are targeting a 2026 launch across major UK cities.",
+      "Fittrybe is available now on the Apple App Store and Google Play. Download it on iPhone or Android, or visit fittrybe.app from your browser to get started.",
   },
   {
     question: "Where is Fittrybe available?",
     answer:
-      "Fittrybe will initially launch in major UK cities including London, Manchester, Birmingham, and Bristol. Global expansion is planned for 2026 and beyond.",
+      "Fittrybe is live in major UK cities including London, Manchester, Birmingham, and Bristol, and continues to expand to new cities every month.",
   },
 ];
 

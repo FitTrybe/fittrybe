@@ -17,6 +17,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getBlogPost, getAllBlogSlugs } from "@/lib/posts";
 import { Wordmark } from "@/components/brand/Wordmark";
+import SmartDownloadLink from "@/components/SmartDownloadLink";
 import { seoConfig, buildCanonicalUrl } from "@/lib/seo-config";
 import {
   buildWebPageSchema,
@@ -264,12 +265,11 @@ export default async function BlogPostPage({
             <p className="text-white/60 mb-4 font-[family-name:var(--font-inter-tight)]">
               Ready to find local sports sessions near you?
             </p>
-            <Link
-              href="/waitlist"
+            <SmartDownloadLink
               className="inline-block px-8 py-3 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
             >
-              Join Fittrybe — Find Your Game
-            </Link>
+              Get the App — Find Your Game
+            </SmartDownloadLink>
           </footer>
         </article>
       </main>

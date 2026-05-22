@@ -6,6 +6,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
+import SmartDownloadLink from "@/components/SmartDownloadLink";
 import { getActiveVenues } from "@/lib/venues";
 import { sportLabel } from "@/lib/events";
 import { buildCanonicalUrl, seoConfig } from "@/lib/seo-config";
@@ -95,12 +96,11 @@ export default async function VenuesIndexPage() {
             >
               Sessions
             </Link>
-            <Link
-              href="/waitlist"
+            <SmartDownloadLink
               className="text-sm font-medium px-4 py-2 rounded-full bg-[#B6FF00] text-black hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-inter-tight)]"
             >
-              Join Waitlist
-            </Link>
+              Get the App
+            </SmartDownloadLink>
           </div>
         </nav>
 

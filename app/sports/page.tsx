@@ -1,7 +1,7 @@
 /**
  * /sports — Sport hub index page.
  * Programmatic SEO: provides a clean entry point linking to every per-sport
- * page, internally crosslinks to /events and the waitlist, and exposes
+ * page, internally crosslinks to /events and the download CTA, and exposes
  * a CollectionPage schema so search engines crawl the hub efficiently.
  */
 
@@ -10,6 +10,7 @@ import Link from "next/link";
 import { SPORTS } from "@/lib/sports";
 import { seoConfig, buildCanonicalUrl } from "@/lib/seo-config";
 import { Wordmark } from "@/components/brand/Wordmark";
+import SmartDownloadLink from "@/components/SmartDownloadLink";
 import {
   buildBreadcrumbSchema,
   buildGraphSchema,
@@ -115,12 +116,11 @@ export default function SportsHubPage() {
             >
               Sessions
             </Link>
-            <Link
-              href="/waitlist"
+            <SmartDownloadLink
               className="text-sm font-medium px-4 py-2 rounded-full bg-[#B6FF00] text-black hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-inter-tight)]"
             >
-              Join Waitlist
-            </Link>
+              Get the App
+            </SmartDownloadLink>
           </div>
         </nav>
 
@@ -170,12 +170,11 @@ export default function SportsHubPage() {
           <p className="text-white/60 mb-4 font-[family-name:var(--font-inter-tight)]">
             Don&apos;t see your sport? More are added every month.
           </p>
-          <Link
-            href="/waitlist"
+          <SmartDownloadLink
             className="inline-block px-8 py-4 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
           >
-            Join Fittrybe — Request a Sport
-          </Link>
+            Get the App — Request a Sport
+          </SmartDownloadLink>
         </section>
       </main>
     </>

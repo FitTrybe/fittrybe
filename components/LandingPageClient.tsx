@@ -26,6 +26,8 @@ import {
   useMotionValueEvent,
 } from "framer-motion";
 import Link from "next/link";
+import SmartDownloadLink from "@/components/SmartDownloadLink";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/download-links";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 function IconArrowRight({ size = 16, color = "currentColor" }: { size?: number; color?: string }) {
@@ -353,7 +355,7 @@ function Navbar() {
           <Link href="/events" aria-label="View upcoming sports sessions" className="nav-link">Sessions</Link>
           <Link href="/blog" aria-label="Read the Fittrybe blog" className="nav-link">Blog</Link>
           <Link href="/support" aria-label="Contact Fittrybe support" className="nav-link">Support</Link>
-          <a href="/waitlist" aria-label="Join the Fittrybe waitlist for early access" className="nav-cta">Join Waitlist</a>
+          <SmartDownloadLink aria-label="Download Fittrybe on your phone" className="nav-cta">Get the App</SmartDownloadLink>
         </div>
 
         <button
@@ -386,7 +388,7 @@ function Navbar() {
         <Link href="/events" className="nav-link" onClick={closeMenu} role="menuitem">Sessions</Link>
         <Link href="/blog" className="nav-link" onClick={closeMenu} role="menuitem">Blog</Link>
         <Link href="/support" className="nav-link" onClick={closeMenu} role="menuitem">Support</Link>
-        <a href="/waitlist" className="nav-cta" onClick={closeMenu} role="menuitem">Join Waitlist</a>
+        <SmartDownloadLink className="nav-cta" onClick={closeMenu} role="menuitem">Get the App</SmartDownloadLink>
       </div>
     </>
   );
@@ -492,7 +494,7 @@ function HeroSection() {
           }}
         >
           <span style={{ width: 6, height: 6, background: "#B6FF00", borderRadius: "50%", animation: "blink 1.5s infinite" }} aria-hidden="true" />
-          Coming Soon — Be First To Play
+          Available Now — Find Your Game
         </motion.div>
 
         {/* ── H1: Primary keyword target ── */}
@@ -546,7 +548,7 @@ function HeroSection() {
           className="hero-buttons"
           style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}
         >
-          <a href="/waitlist" aria-label="Join the Fittrybe waitlist and get early access to local sports sessions" style={{
+          <SmartDownloadLink aria-label="Download Fittrybe and find local sports sessions" style={{
             background: "#B6FF00", color: "#0D0D0D", padding: "0.85rem 2rem",
             borderRadius: 8, fontFamily: "var(--font-anton, 'Anton', sans-serif)",
             fontSize: "1rem", fontWeight: 800, letterSpacing: "0.08em",
@@ -556,7 +558,7 @@ function HeroSection() {
           }}
             onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(182,255,0,0.25)"; }}
             onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-          >Get Early Access <IconArrowRight size={16} color="#0D0D0D" /></a>
+          >Get the App <IconArrowRight size={16} color="#0D0D0D" /></SmartDownloadLink>
 
           <a href="#how-it-works" aria-label="Learn how Fittrybe works" style={{
             color: "#9CA3AF", padding: "0.85rem 2rem",
@@ -844,19 +846,25 @@ const SPORT_EMOJIS = [
 ];
 
 function BentoGrid() {
-  const [waitlistCount, setWaitlistCount] = useState(0);
+  const [playerCount, setPlayerCount] = useState(0);
   useEffect(() => {
     const fetchCount = async () => {
       try {
-        const { count } = await supabase.from("waitlist").select("*", { count: "exact", head: true });
-        setWaitlistCount(count || 0);
+        // Combine app users with historical waitlist signups for a single
+        // "players on Fittrybe" number. Either table being unavailable just
+        // falls through to 0 and the +100 floor still gives a friendly value.
+        const [usersRes, waitlistRes] = await Promise.allSettled([
+          supabase.from("users").select("*", { count: "exact", head: true }),
+          supabase.from("waitlist").select("*", { count: "exact", head: true }),
+        ]);
+        const users = usersRes.status === "fulfilled" ? usersRes.value.count ?? 0 : 0;
+        const waitlist = waitlistRes.status === "fulfilled" ? waitlistRes.value.count ?? 0 : 0;
+        setPlayerCount(users + waitlist);
       } catch (error) {
-        console.error("Error fetching waitlist count:", error);
+        console.error("Error fetching player count:", error);
       }
     };
     fetchCount();
-    const channel = supabase.channel("waitlist-changes").on("postgres_changes", { event: "*", schema: "public", table: "waitlist" }, () => fetchCount()).subscribe();
-    return () => { supabase.removeChannel(channel); };
   }, []);
 
   return (
@@ -878,7 +886,7 @@ function BentoGrid() {
       <div className="bento-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gridTemplateRows: "auto auto", gap: 14, maxWidth: 1200, margin: "0 auto" }}>
         {/* Stats card */}
         <motion.article
-          className="bento-card" aria-label="Waitlist and launch stats"
+          className="bento-card" aria-label="Fittrybe community stats"
           initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.6, delay: 0 }}
           style={{ gridColumn: "1 / 2", gridRow: "1 / 3", padding: "2.5rem", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 400, background: "linear-gradient(145deg, #0D0D0D 0%, #111 100%)" }}
@@ -886,12 +894,12 @@ function BentoGrid() {
           <div>
             <p style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#B6FF00", marginBottom: "1rem" }}>● LIVE COUNT</p>
             <p style={{ fontFamily: "var(--font-anton, 'Anton', sans-serif)", fontSize: "clamp(3.5rem, 6vw, 5.5rem)", fontWeight: 900, lineHeight: 1, color: "#fff" }}>
-              <AnimatedCount target={waitlistCount + 100 || 240} suffix="+" />
+              <AnimatedCount target={playerCount + 100 || 240} suffix="+" />
             </p>
-            <p style={{ fontSize: "0.85rem", color: "#4B5563", fontWeight: 500, marginTop: "0.5rem" }}>Players on the waitlist</p>
+            <p style={{ fontSize: "0.85rem", color: "#4B5563", fontWeight: 500, marginTop: "0.5rem" }}>Players already on Fittrybe</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {[{ num: "5+", label: "Sports & growing" }, { num: "FREE", label: "To join & play" }, { num: "2026", label: "Launch target" }].map(({ num, label }) => (
+            {[{ num: "5+", label: "Sports & growing" }, { num: "FREE", label: "To join & play" }, { num: "LIVE", label: "iOS & Android" }].map(({ num, label }) => (
               <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                 <span style={{ fontFamily: "var(--font-anton, 'Anton', sans-serif)", fontSize: "1.4rem", fontWeight: 800, color: "#B6FF00" }}>{num}</span>
                 <span style={{ fontSize: "0.75rem", color: "#4B5563", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" }}>{label}</span>
@@ -942,21 +950,21 @@ function BentoGrid() {
             width: "100%"
           }}>
             <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-              <p style={{ 
-                fontSize: "0.68rem", 
-                fontWeight: 700, 
-                letterSpacing: "0.12em", 
-                textTransform: "uppercase", 
-                color: "#B6FF00", 
-                marginBottom: "0.75rem" 
-              }}>● COMING SOON</p>
-              <h3 style={{ 
-                fontFamily: "var(--font-anton, 'Anton', sans-serif)", 
-                fontSize: "clamp(1.8rem, 4vw, 3rem)", 
-                fontWeight: 900, 
-                textTransform: "uppercase", 
-                letterSpacing: "-0.02em", 
-                lineHeight: 1 
+              <p style={{
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "#B6FF00",
+                marginBottom: "0.75rem"
+              }}>● AVAILABLE NOW</p>
+              <h3 style={{
+                fontFamily: "var(--font-anton, 'Anton', sans-serif)",
+                fontSize: "clamp(1.8rem, 4vw, 3rem)",
+                fontWeight: 900,
+                textTransform: "uppercase",
+                letterSpacing: "-0.02em",
+                lineHeight: 1
               }}>GET THE APP</h3>
             </div>
             
@@ -967,50 +975,50 @@ function BentoGrid() {
               justifyContent: "center",
               width: "100%"
             }}>
-              <a href="/waitlist" className="store-btn" aria-label="Join waitlist for Fittrybe on the App Store" style={{
-                display: "inline-flex", 
-                alignItems: "center", 
-                gap: "10px", 
+              <a href={APP_STORE_URL} target="_blank" rel="noopener" className="store-btn" aria-label="Download Fittrybe on the App Store" style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "10px",
                 padding: "14px 22px",
-                borderRadius: "12px", 
+                borderRadius: "12px",
                 border: "1.5px solid rgba(255,255,255,0.12)",
-                background: "rgba(255,255,255,0.04)", 
+                background: "rgba(255,255,255,0.04)",
                 cursor: "pointer",
                 transition: "background 0.2s, border-color 0.2s, transform 0.2s",
-                textDecoration: "none", 
+                textDecoration: "none",
                 color: "#fff",
-                flex: "0 1 auto", // Allow buttons to shrink but not grow
-                minWidth: "160px", // Set minimum width for consistency
+                flex: "0 1 auto",
+                minWidth: "160px",
               }}
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.transform = ""; }}
               >
                 <IconApple size={20} color="#fff" />
-                <div style={{ textAlign: "center" }}> {/* Center align text inside button */}
+                <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: "0.6rem", color: "#9CA3AF", fontWeight: 500, letterSpacing: "0.05em" }}>DOWNLOAD ON THE</div>
                   <div style={{ fontSize: "0.9rem", fontWeight: 700 }}>App Store</div>
                 </div>
               </a>
-              <a href="/waitlist" className="store-btn" aria-label="Join waitlist for Fittrybe on Google Play" style={{
-                display: "inline-flex", 
-                alignItems: "center", 
-                gap: "10px", 
+              <a href={PLAY_STORE_URL} target="_blank" rel="noopener" className="store-btn" aria-label="Get Fittrybe on Google Play" style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "10px",
                 padding: "14px 22px",
-                borderRadius: "12px", 
+                borderRadius: "12px",
                 border: "1.5px solid rgba(255,255,255,0.12)",
-                background: "rgba(255,255,255,0.04)", 
+                background: "rgba(255,255,255,0.04)",
                 cursor: "pointer",
                 transition: "background 0.2s, border-color 0.2s, transform 0.2s",
-                textDecoration: "none", 
+                textDecoration: "none",
                 color: "#fff",
-                flex: "0 1 auto", // Allow buttons to shrink but not grow
-                minWidth: "160px", // Set minimum width for consistency
+                flex: "0 1 auto",
+                minWidth: "160px",
               }}
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.transform = ""; }}
               >
                 <IconGooglePlay size={20} color="#B6FF00" />
-                <div style={{ textAlign: "center" }}> {/* Center align text inside button */}
+                <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: "0.6rem", color: "#9CA3AF", fontWeight: 500, letterSpacing: "0.05em" }}>GET IT ON</div>
                   <div style={{ fontSize: "0.9rem", fontWeight: 700 }}>Google Play</div>
                 </div>
@@ -1312,7 +1320,7 @@ function Footer() {
             { label: "Sports", href: "/sports" },
             { label: "Sessions", href: "/events" },
             { label: "Blog", href: "/blog" },
-            { label: "Join Waitlist", href: "/waitlist" },
+            { label: "Get the App", href: "/download" },
             { label: "Support", href: "/support" },
             { label: "Privacy Policy", href: "/privacy" },
             { label: "Terms of Use", href: "/terms" },

@@ -191,7 +191,7 @@ export async function GET(req: NextRequest) {
             >
               {emoji
                 ? `${emoji}  ${sport.charAt(0).toUpperCase() + sport.slice(1)} Session`
-                : "Social Sports App — Coming Soon"}
+                : "Social Sports App — Available Now"}
             </span>
           </div>
 
@@ -316,7 +316,7 @@ export async function GET(req: NextRequest) {
               textTransform: "uppercase",
             }}
           >
-            Join Waitlist →
+            Get the App →
           </div>
         </div>
 

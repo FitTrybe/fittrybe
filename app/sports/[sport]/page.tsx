@@ -11,6 +11,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getAllSportSlugs, getSportBySlug } from "@/lib/sports";
 import { Wordmark } from "@/components/brand/Wordmark";
+import SmartDownloadLink from "@/components/SmartDownloadLink";
 import { getUpcomingEvents } from "@/lib/events";
 import { seoConfig, buildCanonicalUrl } from "@/lib/seo-config";
 import EventCard from "@/components/EventCard";
@@ -133,12 +134,11 @@ export default async function SportLandingPage({
             >
               All sports
             </Link>
-            <Link
-              href="/waitlist"
+            <SmartDownloadLink
               className="text-sm font-medium px-4 py-2 rounded-full bg-[#B6FF00] text-black hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-inter-tight)]"
             >
-              Join Waitlist
-            </Link>
+              Get the App
+            </SmartDownloadLink>
           </div>
         </nav>
 
@@ -209,15 +209,14 @@ export default async function SportLandingPage({
             <div className="bg-white/5 border border-white/10 rounded-2xl p-10 text-center">
               <p className="text-white/60 mb-6 font-[family-name:var(--font-inter-tight)]">
                 No live {content.name.toLowerCase()} sessions in your area
-                right now. Join the waitlist and get notified the moment one
+                right now. Get the app and we&apos;ll show you the moment one
                 drops.
               </p>
-              <Link
-                href="/waitlist"
+              <SmartDownloadLink
                 className="inline-block px-6 py-3 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] uppercase tracking-wide"
               >
-                Get notified
-              </Link>
+                Get the App
+              </SmartDownloadLink>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -284,12 +283,11 @@ export default async function SportLandingPage({
           <p className="text-white/60 mb-4 font-[family-name:var(--font-inter-tight)]">
             Ready to play {content.name.toLowerCase()}?
           </p>
-          <Link
-            href="/waitlist"
+          <SmartDownloadLink
             className="inline-block px-8 py-4 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
           >
-            Join Fittrybe — Find Your Game
-          </Link>
+            Get the App — Find Your Game
+          </SmartDownloadLink>
         </section>
       </main>
     </>

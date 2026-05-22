@@ -10,7 +10,7 @@
  *  • Descriptive alt text on all images
  *  • H1 → H2 → H3 heading hierarchy for crawlers
  *  • FAQ section (visible + FAQ schema) for AI search engines
- *  • Internal link: Landing → /waitlist with keyword anchor text
+ *  • Internal link: Landing → /download with keyword anchor text
  *  • Font CSS moved from @import to next/font CSS variables (CLS fix)
  */
 
