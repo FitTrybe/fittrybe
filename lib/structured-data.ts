@@ -257,7 +257,7 @@ export const LANDING_FAQS = [
   {
     question: "Where can I download Fittrybe?",
     answer:
-      "Fittrybe is available now on the Apple App Store and Google Play. Download it on iPhone or Android, or visit fittrybe.app from your browser to get started.",
+      "Fittrybe is available now on the Apple App Store and Google Play. Download it on iPhone or Android, or visit our download page from your browser to get started.",
   },
   {
     question: "Where is Fittrybe available?",

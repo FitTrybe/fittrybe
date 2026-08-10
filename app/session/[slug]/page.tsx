@@ -401,7 +401,7 @@ export default async function SessionSlugPage({
 
 function DeepLinkBridge({ id }: { id: string }) {
   const safeId = encodeURIComponent(id);
-  const fallbackUrl = `https://fittrybe.app/session/${safeId}`;
+  const fallbackUrl = `/events/${safeId}`;
   const appUrl = `fittrybe://session/${safeId}`;
   const webEquivalent = buildCanonicalUrl(`/events/${safeId}`);
 

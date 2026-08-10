@@ -6,7 +6,7 @@
  *
  *   • iOS    → App Store
  *   • Android → Google Play
- *   • Web / desktop → fittrybe.app
+ *   • Web / desktop → /download
  */
 
 export const APP_STORE_URL =
@@ -15,13 +15,13 @@ export const APP_STORE_URL =
 export const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.fittrybe.app";
 
-export const WEB_APP_URL = "https://fittrybe.app";
+export const WEB_APP_URL = "/download";
 
 export type Platform = "ios" | "android" | "web";
 
 /**
  * Resolve the right download URL for a given user-agent.
- * Server-rendered code (no UA) falls through to the web app URL so links
+ * Server-rendered code (no UA) falls through to the /download page so links
  * still work without JS.
  */
 export function getDownloadUrl(userAgent?: string | null): string {

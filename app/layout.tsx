@@ -15,7 +15,7 @@ import {
 } from "@/lib/structured-data";
 
 // ─── Font Optimisation ────────────────────────────────────────────────────────
-// Display + body fonts to match fittrybe.app
+// Display + body fonts matching the Fittrybe brand
 const anton = Anton({
   subsets: ["latin"],
   weight: ["400"],

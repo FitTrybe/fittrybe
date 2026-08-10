@@ -1071,13 +1071,21 @@ export default async function EventDetailPage({
                     : "Ready to play?"}
                 </p>
                 <p className="text-white/40 text-sm mb-6 font-[family-name:var(--font-inter-tight)]">
-                  Download the Fittrybe app to reserve your spot.
+                  Sign in or download the app to reserve your spot.
                 </p>
-                <SmartDownloadLink
-                  className="inline-block px-8 py-3 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
-                >
-                  Get the App — Reserve Your Spot
-                </SmartDownloadLink>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Link
+                    href={`/login?redirect=${encodeURIComponent(`/events/${event.id}`)}`}
+                    className="inline-block px-8 py-3 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
+                  >
+                    Sign In to Join
+                  </Link>
+                  <SmartDownloadLink
+                    className="inline-block px-8 py-3 bg-white/10 text-white font-bold rounded-full hover:bg-white/20 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide border border-white/20"
+                  >
+                    Get the App
+                  </SmartDownloadLink>
+                </div>
               </>
             )}
           </footer>

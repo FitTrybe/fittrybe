@@ -211,7 +211,7 @@ export default function DownloadPageClient() {
               target="_blank"
               rel="noopener"
             >
-              Open fittrybe.app
+              Open Fittrybe
             </a>
           </p>
         </div>

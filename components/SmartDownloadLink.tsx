@@ -7,9 +7,9 @@
  * platform:
  *   • iOS     → App Store
  *   • Android → Google Play
- *   • Anything else → fittrybe.app (web app)
+ *   • Anything else → /download page
  *
- * The server-rendered href defaults to the web app URL so the link still works
+ * The server-rendered href defaults to the /download page so the link still works
  * without JS and search crawlers see a real destination.
  */
 

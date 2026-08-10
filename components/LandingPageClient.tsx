@@ -21,12 +21,7 @@ import type { FittrybeEvent } from "@/lib/events";
 import { sportEmoji, formatEventDate, formatEventTime, formatPrice } from "@/lib/events";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { useRouter } from "next/navigation";
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useMotionValueEvent,
-} from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import SmartDownloadLink from "@/components/SmartDownloadLink";
 import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/download-links";
@@ -94,10 +89,7 @@ function IconChevronDown({ size = 18, color = "currentColor" }: { size?: number;
 }
 
 // ─── CSS (font variables injected by next/font in layout) ────────────────────
-const globalStyles = `*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body { background: #050505; color: #fff; font-family: var(--font-inter-tight, 'Inter Tight', sans-serif); overflow-x: hidden; }
-
+const globalStyles = `
   @keyframes glowPulse {
     0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
     50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
@@ -345,77 +337,6 @@ const globalStyles = `*, *::before, *::after { box-sizing: border-box; margin: 0
   }
 
   /* ── Video Testimonials ── */
-  .video-testimonials-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    max-width: 900px;
-    margin: 0 auto;
-  }
-  .video-card {
-    position: relative;
-    border-radius: 24px;
-    overflow: hidden;
-    aspect-ratio: 9 / 14;
-    background: #111;
-    cursor: pointer;
-  }
-  .video-card video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .video-card-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 40%, transparent 70%, rgba(0,0,0,0.3) 100%);
-    pointer-events: none;
-    z-index: 2;
-    transition: opacity 0.3s ease;
-  }
-  .video-card-info {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 20px;
-    z-index: 3;
-  }
-  .video-play-btn {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(1);
-    z-index: 4;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: rgba(182,255,0,0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    backdrop-filter: blur(8px);
-  }
-  .video-card:hover .video-play-btn {
-    transform: translate(-50%, -50%) scale(1.1);
-  }
-  .video-play-btn.is-playing {
-    opacity: 0;
-    pointer-events: none;
-  }
-  @media (max-width: 640px) {
-    .video-testimonials-grid {
-      grid-template-columns: 1fr;
-      gap: 20px;
-      max-width: 360px;
-    }
-    .video-card {
-      aspect-ratio: 9 / 14;
-    }
-  }
-
   /* ── Community Section ── */
   .community-cta-btn:hover {
     box-shadow: 0 12px 40px rgba(182,255,0,0.3) !important;
@@ -442,15 +363,22 @@ const globalStyles = `*, *::before, *::after { box-sizing: border-box; margin: 0
       justify-content: center !important;
     }
     .community-section-inner > div:last-child {
-      height: 60vh;
-      min-height: 400px;
-      align-items: flex-end !important;
+      min-height: auto;
+      padding: 0 4vw 60px;
+    }
+  }
+  @media (max-width: 768px) {
+    .community-video-row {
+      grid-template-columns: 1fr 1fr !important;
+      max-width: 480px !important;
+    }
+    .community-video-desktop-only {
+      display: none !important;
     }
   }
   @media (max-width: 480px) {
-    .community-section-inner > div:last-child {
-      height: 50vh;
-      min-height: 340px;
+    .community-video-row {
+      width: 95% !important;
     }
   }
   @media (max-width: 480px) {
@@ -512,6 +440,7 @@ function Navbar() {
           <Link href="/events" aria-label="View upcoming sports sessions" className="nav-link">Sessions</Link>
           <Link href="/blog" aria-label="Read the Fittrybe blog" className="nav-link">Blog</Link>
           <Link href="/support" aria-label="Contact Fittrybe support" className="nav-link">Support</Link>
+          <Link href="/login" aria-label="Sign in to Fittrybe" className="nav-link">Sign in</Link>
           <SmartDownloadLink aria-label="Download Fittrybe on your phone" className="nav-cta">Get the App</SmartDownloadLink>
         </div>
 
@@ -545,6 +474,7 @@ function Navbar() {
         <Link href="/events" className="nav-link" onClick={closeMenu} role="menuitem">Sessions</Link>
         <Link href="/blog" className="nav-link" onClick={closeMenu} role="menuitem">Blog</Link>
         <Link href="/support" className="nav-link" onClick={closeMenu} role="menuitem">Support</Link>
+        <Link href="/login" className="nav-link" onClick={closeMenu} role="menuitem">Sign in</Link>
         <SmartDownloadLink className="nav-cta" onClick={closeMenu} role="menuitem">Get the App</SmartDownloadLink>
       </div>
     </>
@@ -573,7 +503,6 @@ function HeroPhoneVideo() {
       autoPlay muted loop playsInline
       aria-label="Fittrybe app preview showing local sports sessions"
       style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", display: "block" }}
-      webkit-playsinline="true"
     >
       <source src="/videos/mockup.mp4" type="video/mp4" />
       <track kind="captions" />
@@ -620,7 +549,6 @@ function HeroSection() {
             objectFit: "cover", objectPosition: "center",
             opacity: 0.18, filter: "saturate(0.4) brightness(0.7)",
           }}
-          ref={el => { if (el) { el.muted = true; el.play().catch(() => {}); } }}
         >
           <source src="/videos/hero.mp4" type="video/mp4" />
           <track kind="captions" />
@@ -1171,7 +1099,7 @@ function SessionsNearYou() {
           isFeatured: row.is_featured ?? false,
           hostId: row.host_id,
           createdAt: row.created_at,
-          updatedAt: row.updated_at ?? null,
+          updatedAt: null,
           description: null,
         };
         return {
@@ -1508,24 +1436,19 @@ const SPORT_EMOJIS = [
   { emoji: "🥊", label: "Boxing", delay: 1.1 },
 ];
 
-// ─── Community Flip Videos ───────────────────────────────────────────────────
+// ─── Community Video Row ────────────────────────────────────────────────────
 const COMMUNITY_VIDEOS = [
-  "/videos/community-1.mp4",
-  "/videos/community-2.mp4",
+  "/videos/community.mp4",
+  "/videos/community1.mp4",
+  "/videos/community2.mp4",
+  "/videos/community3.mp4",
+  "/videos/community4.mp4",
+  "/videos/community5.mp4",
 ];
 
-function CommunityFlipVideos() {
-  const [activeIndex, setActiveIndex] = useState(0);
+function CommunityVideoRow() {
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveIndex(prev => (prev + 1) % COMMUNITY_VIDEOS.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Auto-play all videos so they're ready when flipped to
   useEffect(() => {
     videoRefs.current.forEach(v => {
       if (v) { v.muted = true; v.play().catch(() => {}); }
@@ -1536,7 +1459,7 @@ function CommunityFlipVideos() {
     <div style={{
       position: "relative",
       display: "flex", alignItems: "center", justifyContent: "center",
-      overflow: "hidden", perspective: "1200px",
+      overflow: "hidden", padding: "40px 0",
     }}>
       {/* Ambient glow */}
       <div style={{
@@ -1551,22 +1474,22 @@ function CommunityFlipVideos() {
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+        className="community-video-row"
         style={{
           position: "relative", zIndex: 2,
-          width: "85%", maxWidth: 420, aspectRatio: "9 / 14",
-          borderRadius: 28, overflow: "hidden",
-          boxShadow: "0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)",
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 0,
+          width: "90%", maxWidth: 720,
         }}
       >
         {COMMUNITY_VIDEOS.map((src, i) => (
           <div
             key={src}
+            className={i >= 4 ? "community-video-desktop-only" : undefined}
             style={{
-              position: "absolute", inset: 0,
-              backfaceVisibility: "hidden",
-              transition: "opacity 0.8s ease, transform 0.8s ease",
-              opacity: activeIndex === i ? 1 : 0,
-              transform: activeIndex === i ? "rotateY(0deg)" : "rotateY(90deg)",
+              aspectRatio: "9 / 14",
+              borderRadius: 0, overflow: "hidden",
             }}
           >
             <video
@@ -1582,27 +1505,6 @@ function CommunityFlipVideos() {
             </video>
           </div>
         ))}
-
-        {/* Progress dots */}
-        <div style={{
-          position: "absolute", bottom: 16, left: "50%",
-          transform: "translateX(-50%)", zIndex: 5,
-          display: "flex", gap: 8,
-        }}>
-          {COMMUNITY_VIDEOS.map((_, i) => (
-            <div
-              key={i}
-              style={{
-                width: activeIndex === i ? 24 : 8, height: 8,
-                borderRadius: 4,
-                background: activeIndex === i ? "#B6FF00" : "rgba(255,255,255,0.3)",
-                transition: "all 0.4s ease",
-                cursor: "pointer",
-              }}
-              onClick={() => setActiveIndex(i)}
-            />
-          ))}
-        </div>
       </motion.div>
     </div>
   );
@@ -1753,8 +1655,8 @@ function CommunitySection() {
           </motion.div>
         </div>
 
-        {/* Right — Flipping Videos */}
-        <CommunityFlipVideos />
+        {/* Right — Video Row */}
+        <CommunityVideoRow />
       </div>
 
       {/* Mobile responsive styles are in globalStyles */}
@@ -1762,170 +1664,6 @@ function CommunitySection() {
   );
 }
 
-// ─── Video Reviews ──────────────────────────────────────────────────────────
-const VIDEO_REVIEWS = [
-  {
-    src: "/videos/review-1.mp4",
-    name: "Player Review",
-    caption: "Hear what our players have to say.",
-  },
-  {
-    src: "/videos/review-2.mp4",
-    name: "Player Review",
-    caption: "Real stories from real players.",
-  },
-];
-
-function VideoTestimonials() {
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  const [playing, setPlaying] = useState<number | null>(null);
-
-  const handleToggle = (index: number) => {
-    const video = videoRefs.current[index];
-    if (!video) return;
-
-    if (playing === index) {
-      video.pause();
-      setPlaying(null);
-    } else {
-      // Pause any currently playing video
-      if (playing !== null && videoRefs.current[playing]) {
-        videoRefs.current[playing]!.pause();
-      }
-      video.play();
-      setPlaying(index);
-    }
-  };
-
-  return (
-    <section
-      aria-label="Video reviews from Fittrybe players"
-      style={{
-        padding: "100px 5vw",
-        background: "#050505",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Background glow */}
-      <div style={{
-        position: "absolute", top: "30%", left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: 600, height: 600,
-        background: "radial-gradient(circle, rgba(182,255,0,0.04) 0%, transparent 70%)",
-        filter: "blur(100px)", pointerEvents: "none",
-      }} />
-
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        style={{ textAlign: "center", marginBottom: 56, position: "relative", zIndex: 1 }}
-      >
-        <p style={{
-          fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.14em",
-          textTransform: "uppercase", color: "#B6FF00", marginBottom: 16,
-        }}>
-          PLAYER REVIEWS
-        </p>
-        <h2 style={{
-          fontFamily: "var(--font-anton, 'Anton', sans-serif)",
-          fontSize: "clamp(2.2rem, 5.5vw, 4.5rem)", fontWeight: 900,
-          textTransform: "uppercase", letterSpacing: "-0.02em",
-          lineHeight: 1.05, color: "#fff",
-        }}>
-          HEAR IT FROM <span style={{ color: "#B6FF00" }}>THEM</span>
-        </h2>
-        <p style={{
-          fontSize: "1rem", color: "#6B7280", lineHeight: 1.7,
-          maxWidth: 480, margin: "16px auto 0",
-          fontFamily: "var(--font-inter-tight, sans-serif)",
-        }}>
-          Don&apos;t take our word for it. Real players sharing their Fittrybe experience.
-        </p>
-      </motion.div>
-
-      <div className="video-testimonials-grid" style={{ position: "relative", zIndex: 1 }}>
-        {VIDEO_REVIEWS.map((t, i) => (
-          <motion.div
-            key={t.src}
-            className="video-card"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.7, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] }}
-            onClick={() => handleToggle(i)}
-          >
-            <video
-              ref={(el) => { videoRefs.current[i] = el; }}
-              src={t.src}
-              playsInline
-              loop
-              muted
-              preload="metadata"
-              aria-label={t.name}
-              onEnded={() => setPlaying(null)}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            >
-              <track kind="descriptions" label="Video description" />
-            </video>
-
-            <div className="video-card-overlay" />
-
-            {/* Play button */}
-            <div className={`video-play-btn ${playing === i ? "is-playing" : ""}`}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="#0D0D0D" aria-hidden="true">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </div>
-
-            {/* Bottom info */}
-            <div className="video-card-info">
-              <p style={{
-                fontFamily: "var(--font-anton, 'Anton', sans-serif)",
-                fontSize: "1.1rem", fontWeight: 800, color: "#fff",
-                textTransform: "uppercase", letterSpacing: "0.02em",
-                marginBottom: 4,
-                textShadow: "0 2px 8px rgba(0,0,0,0.5)",
-              }}>
-                {t.name}
-              </p>
-              <p style={{
-                fontSize: "0.78rem", color: "rgba(255,255,255,0.7)",
-                fontFamily: "var(--font-inter-tight, sans-serif)",
-                fontWeight: 500,
-              }}>
-                {t.caption}
-              </p>
-            </div>
-
-            {/* Review badge */}
-            <div style={{
-              position: "absolute", top: 16, left: 16, zIndex: 5,
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "6px 12px", borderRadius: 20,
-              background: "rgba(0,0,0,0.6)", backdropFilter: "blur(12px)",
-              border: "1px solid rgba(182,255,0,0.2)",
-            }}>
-              <div style={{
-                width: 6, height: 6, borderRadius: "50%",
-                background: "#B6FF00",
-                animation: "blink 1.5s infinite",
-              }} />
-              <span style={{
-                fontSize: "0.6rem", fontWeight: 700, color: "#B6FF00",
-                textTransform: "uppercase", letterSpacing: "0.1em",
-              }}>
-                Review
-              </span>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 function BentoGrid() {
   const [playerCount, setPlayerCount] = useState(0);
@@ -2428,6 +2166,9 @@ function Footer() {
       <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(255,255,255,0.04)", textAlign: "center", fontSize: "0.72rem", color: "#2a2a2a", fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" }}>
         © {currentYear} Fittrybe Ltd. All rights reserved. · London, United Kingdom
       </div>
+      <div style={{ marginTop: "0.75rem", textAlign: "center", fontSize: "0.65rem", color: "#1f1f1f", fontWeight: 500, letterSpacing: "0.06em" }}>
+        ICO Registration: ZC210931
+      </div>
     </footer>
   );
 }
@@ -2446,7 +2187,6 @@ export default function LandingPageClient({
         <HeroSection />
         <SessionsNearYou />
         <CommunitySection />
-        <VideoTestimonials />
         <BentoGrid />
         <BlogPreviewSection />
         <FAQSection faqs={faqs} />

@@ -1,4 +1,4 @@
-// middleware.ts — Protect all /admin/* routes
+// proxy.ts — Protect all /admin/* routes
 // Uses a session cookie set at login to gate access server-side.
 // Supabase Auth is client-side only, so we use a lightweight cookie check
 // and rely on client-side auth guards for full token verification.
@@ -8,7 +8,7 @@ import type { NextRequest } from "next/server";
 
 const ADMIN_SESSION_COOKIE = "fittrybe_admin_session";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Only protect /admin routes (but NOT /admin/login or /admin/signup)

@@ -23,7 +23,8 @@ import {
   buildGraphSchema,
   LANDING_FAQS,
 } from "@/lib/structured-data";
-import LandingPageClient from "@/components/LandingPageClient";
+import dynamic from "next/dynamic";
+const LandingPageClient = dynamic(() => import("@/components/LandingPageClient"), { ssr: true });
 
 // ─── Page-level Metadata ──────────────────────────────────────────────────────
 export const metadata: Metadata = {

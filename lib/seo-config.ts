@@ -115,7 +115,7 @@ export const seoConfig = {
   appLinks: {
     ios: "https://apps.apple.com/us/app/fittrybe/id6765941962",
     android: "https://play.google.com/store/apps/details?id=com.fittrybe.app",
-    web: "https://fittrybe.app",
+    web: "/download",
   },
 
   // ─── Verification Codes ─────────────────────────────────────────────────────

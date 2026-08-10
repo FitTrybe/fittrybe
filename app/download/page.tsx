@@ -5,7 +5,7 @@
  *   • iOS     → redirects to the App Store
  *   • Android → redirects to Google Play
  *   • Web     → stays on the page and surfaces both store buttons + a
- *               "Open the web app" link to fittrybe.app
+ *               "Open the web app" link
  */
 import type { Metadata } from "next";
 import { seoConfig, buildOGImageUrl } from "@/lib/seo-config";
