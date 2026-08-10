@@ -107,7 +107,9 @@ const nextConfig: NextConfig = {
   },
 
   experimental: {
-    optimizeCss: true,
+    // optimizeCss requires the `critters` package — re-enable after:
+    // npm install critters
+    // optimizeCss: true,
   },
 };
 

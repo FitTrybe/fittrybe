@@ -17,6 +17,8 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import type { FittrybeEvent } from "@/lib/events";
+import { sportEmoji, formatEventDate, formatEventTime, formatPrice } from "@/lib/events";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { useRouter } from "next/navigation";
 import {
@@ -241,61 +243,215 @@ const globalStyles = `*, *::before, *::after { box-sizing: border-box; margin: 0
     .bento-grid > * { grid-column: 1 / -1 !important; grid-row: auto !important; }
     .footer-inner { flex-direction: column !important; align-items: flex-start !important; gap: 1.5rem !important; }
 
-  /* ── Sticky scroll: mobile stacked layout ── */
-  .sticky-inner {
-    flex-direction: column !important;
-    height: 100vh !important;
-    height: 100svh !important;
-    padding: 80px 5vw 60px !important;
-    gap: 0 !important;
-    justify-content: flex-start !important;
-    overflow: hidden !important;
-    align-items: center !important;
-  }
-  .sticky-right {
-    flex: none !important;
-    width: 100% !important;
-    height: 45% !important;
-    justify-content: center !important;
-    align-items: center !important;
-    order: 1 !important;
-  }
-    .sticky-left {
-    flex: none !important;
-    width: 100% !important;
-    height: 55% !important;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important; /* Change this from flex-start to center */
-    padding-top: 1.5rem !important;
-    order: 2 !important;
-    position: relative !important;
-  }
-  
-  /* Add this new rule to center the content containers */
-  .sticky-left > div {
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    left: 0 !important;
-    right: 0 !important;
-    padding: 0 5vw !important; /* Add some padding on the sides */
-    text-align: center !important;
-  }
-  
-  /* Center the paragraph text */
-  .sticky-left p {
-    text-align: center !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
-  .sticky-phone-outer { width: 160px !important; height: 330px !important; border-radius: 36px !important; }
-  .sticky-phone-inner { border-radius: 34px !important; }
-  .sticky-di { width: 80px !important; height: 26px !important; top: 10px !important; }
 }
+
+  /* ── Sessions Near You ── */
+  .session-card {
+    background: #111;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.06);
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s ease, box-shadow 0.4s ease;
+  }
+  .session-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(182,255,0,0.25);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(182,255,0,0.1);
+  }
+  .session-card-img {
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .session-card:hover .session-card-img {
+    transform: scale(1.08);
+  }
+  .sessions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  .sessions-scroll-mobile {
+    display: none;
+  }
+  .sessions-filters {
+    display: flex;
+  }
+  .filter-chip {
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: #777;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .filter-chip:hover {
+    border-color: rgba(255,255,255,0.15);
+    color: #aaa;
+    background: rgba(255,255,255,0.05);
+  }
+  .filter-chip-active {
+    background: #B6FF00 !important;
+    color: #0D0D0D !important;
+    border-color: #B6FF00 !important;
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(182,255,0,0.15);
+  }
+  .sport-chip {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: transparent;
+    color: #666;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .sport-chip:hover {
+    border-color: rgba(182,255,0,0.2);
+    color: #999;
+  }
+  .sport-chip-active {
+    background: rgba(182,255,0,0.08) !important;
+    color: #B6FF00 !important;
+    border-color: rgba(182,255,0,0.3) !important;
+  }
+  @media (max-width: 1024px) {
+    .sessions-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+  @media (max-width: 768px) {
+    .sessions-grid { display: none !important; }
+    .sessions-scroll-mobile {
+      display: flex !important;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      gap: 14px;
+      padding: 0 5vw 20px;
+      scrollbar-width: none;
+    }
+    .sessions-scroll-mobile::-webkit-scrollbar { display: none; }
+    .sessions-scroll-mobile > * {
+      scroll-snap-align: start;
+      flex: 0 0 80vw;
+      max-width: 300px;
+    }
+    .sessions-filters { display: none !important; }
+  }
+
+  /* ── Video Testimonials ── */
+  .video-testimonials-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .video-card {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    aspect-ratio: 9 / 14;
+    background: #111;
+    cursor: pointer;
+  }
+  .video-card video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .video-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 40%, transparent 70%, rgba(0,0,0,0.3) 100%);
+    pointer-events: none;
+    z-index: 2;
+    transition: opacity 0.3s ease;
+  }
+  .video-card-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    z-index: 3;
+  }
+  .video-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    z-index: 4;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(182,255,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    backdrop-filter: blur(8px);
+  }
+  .video-card:hover .video-play-btn {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  .video-play-btn.is-playing {
+    opacity: 0;
+    pointer-events: none;
+  }
+  @media (max-width: 640px) {
+    .video-testimonials-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+      max-width: 360px;
+    }
+    .video-card {
+      aspect-ratio: 9 / 14;
+    }
+  }
+
+  /* ── Community Section ── */
+  .community-cta-btn:hover {
+    box-shadow: 0 12px 40px rgba(182,255,0,0.3) !important;
+    transform: translateY(-2px);
+  }
+  @media (max-width: 900px) {
+    .community-section-inner {
+      grid-template-columns: 1fr !important;
+      min-height: auto !important;
+    }
+    .community-section-inner > div:first-child {
+      padding: 80px 6vw 40px !important;
+      text-align: center;
+      align-items: center;
+    }
+    .community-section-inner > div:first-child h2 {
+      font-size: clamp(2.2rem, 8vw, 3.5rem) !important;
+    }
+    .community-section-inner > div:first-child p {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .community-section-inner > div:first-child > div > div:nth-child(4) {
+      justify-content: center !important;
+    }
+    .community-section-inner > div:last-child {
+      height: 60vh;
+      min-height: 400px;
+      align-items: flex-end !important;
+    }
+  }
+  @media (max-width: 480px) {
+    .community-section-inner > div:last-child {
+      height: 50vh;
+      min-height: 340px;
+    }
+  }
   @media (max-width: 480px) {
     .hero-section { padding: 80px 4vw 50px !important; }
     .hero-phones { min-height: 360px !important; }
@@ -667,144 +823,650 @@ function HeroSection() {
   );
 }
 
-// ─── 2. HOW IT WORKS (Sticky Scroll) ─────────────────────────────────────────
-const SCROLL_SLIDES = [
-  { label: "01", word: "EXPLORE", sub: "Find sports sessions near you", img: "/images/explore.jpg", desc: "Browse live local sessions by sport, distance, and time. See who's playing, where, and when." },
-  { label: "02", word: "CONNECT", sub: "Meet your local sports tribe", img: "/images/connect.jpg", desc: "Chat with players, build your network, and find people who share your playing style and schedule." },
-  { label: "03", word: "PLAY", sub: "Show up and stay active", img: "/images/play.jpg", desc: "Reserve your spot, show up, play sport, and build the active routine you've always wanted." },
+// ─── 2. SESSIONS NEAR YOU ────────────────────────────────────────────────────
+
+// Hyperlocal areas — not major cities
+const LOCATION_OPTIONS = [
+  { label: "All Areas", query: "" },
+  { label: "Redhill", query: "Redhill" },
+  { label: "Epsom", query: "Epsom" },
+  { label: "Croydon", query: "Croydon" },
+  { label: "Sutton", query: "Sutton" },
+  { label: "Merstham", query: "Merstham" },
 ];
 
-function StickyScrollStory() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
-  const [activeSlide, setActiveSlide] = useState(0);
+const SPORT_FILTERS = [
+  { id: null, label: "All", emoji: "🔥" },
+  { id: "football", label: "Football", emoji: "⚽" },
+  { id: "basketball", label: "Basketball", emoji: "🏀" },
+  { id: "tennis", label: "Tennis", emoji: "🎾" },
+  { id: "badminton", label: "Badminton", emoji: "🏸" },
+  { id: "running", label: "Running", emoji: "🏃" },
+  { id: "cycling", label: "Cycling", emoji: "🚴" },
+  { id: "gym", label: "Gym", emoji: "🏋️" },
+];
 
-  // Section is 300svh; with offset ["start start", "end end"] the effective
-  // scroll range = 200svh. Phases are equal fifths (40svh each) so every
-  // slide-to-next transition feels identical.
-  //
-  // IMPORTANT: each opacity transform is a function (not an input/output
-  // array). When useTransform is given a function, framer-motion skips its
-  // GPU-accelerated CSS scroll-driven animations path and uses the JS
-  // interpolation path that Firefox always uses. On Chromium that array path
-  // proved brittle with sticky + svh + `contain` range — progress sometimes
-  // never reached the slide-3 threshold reliably. The function form makes
-  // behavior identical across browsers. Do not refactor back to array form.
-  const opacity0 = useTransform(scrollYProgress, (v) => {
-    if (v <= 0.20) return 1;
-    if (v >= 0.40) return 0;
-    return 1 - (v - 0.20) / 0.20;
-  });
-  const opacity1 = useTransform(scrollYProgress, (v) => {
-    if (v <= 0.20 || v >= 0.80) return 0;
-    if (v <= 0.40) return (v - 0.20) / 0.20;
-    if (v <= 0.60) return 1;
-    return 1 - (v - 0.60) / 0.20;
-  });
-  const opacity2 = useTransform(scrollYProgress, (v) => {
-    if (v <= 0.60) return 0;
-    if (v >= 0.80) return 1;
-    return (v - 0.60) / 0.20;
-  });
-  const opacities = [opacity0, opacity1, opacity2];
+interface SessionWithHost extends FittrybeEvent {
+  hostName: string | null;
+  hostAvatar: string | null;
+  hostVerified: boolean;
+  badge: string | null;
+  commentsCount: number;
+}
 
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    if (v < 0.30) setActiveSlide(0);
-    else if (v < 0.70) setActiveSlide(1);
-    else setActiveSlide(2);
-  });
+function getBadge(session: { spotsLeft: number; startsAt: string; participantsCount: number; joinPricePence: number }): string | null {
+  if (session.spotsLeft <= 0) return "FULL";
+  if (session.spotsLeft === 1) return "LAST SPOT";
+  if (session.spotsLeft <= 3) return "FILLING UP";
+  const hoursAway = (new Date(session.startsAt).getTime() - Date.now()) / 3600000;
+  if (hoursAway <= 2 && hoursAway > 0) return "STARTING SOON";
+  if (session.participantsCount >= 8) return "POPULAR";
+  if (session.joinPricePence === 0) return "FREE";
+  return null;
+}
+
+const BADGE_STYLES: Record<string, { bg: string; color: string; border: string }> = {
+  "FULL":          { bg: "rgba(239,68,68,0.15)", color: "#EF4444", border: "rgba(239,68,68,0.3)" },
+  "LAST SPOT":     { bg: "rgba(251,146,60,0.15)", color: "#FB923C", border: "rgba(251,146,60,0.3)" },
+  "FILLING UP":    { bg: "rgba(251,191,36,0.15)", color: "#FBBF24", border: "rgba(251,191,36,0.3)" },
+  "STARTING SOON": { bg: "rgba(99,102,241,0.15)", color: "#818CF8", border: "rgba(99,102,241,0.3)" },
+  "POPULAR":       { bg: "rgba(236,72,153,0.15)", color: "#EC4899", border: "rgba(236,72,153,0.3)" },
+  "FREE":          { bg: "rgba(182,255,0,0.1)",  color: "#B6FF00", border: "rgba(182,255,0,0.3)" },
+};
+
+function formatRelativeDay(isoString: string): string {
+  const date = new Date(isoString);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diff = Math.round((target.getTime() - today.getTime()) / 86400000);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  return date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+}
+
+function SessionCard({ event, index }: { event: SessionWithHost; index: number }) {
+  const emoji = sportEmoji(event.sportId);
+  const dayStr = formatRelativeDay(event.startsAt);
+  const timeStr = formatEventTime(event.startsAt);
+  const price = formatPrice(event.joinPricePence);
+  const coverImage = event.bannerUrl || event.placePhotoUrl;
+  const badge = event.badge;
+  const badgeStyle = badge ? BADGE_STYLES[badge] : null;
+  const spotsTotal = event.participantsCount + event.spotsLeft;
+  const fillPercent = spotsTotal > 0 ? Math.min((event.participantsCount / spotsTotal) * 100, 100) : 0;
 
   return (
-    <section
-      id="how-it-works"
-      aria-label="How Fittrybe works — explore, connect, play"
-      ref={containerRef}
-      style={{ height: "300svh", position: "relative" }}
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.5, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+      className="session-card-wrap"
     >
-      <div
-        className="sticky-inner"
-        // svh matches the visible viewport regardless of mobile-browser URL-bar state.
-        // Using vh on Chromium mobile makes this taller than the visible area, which
-        // causes the section to release before scrollYProgress reaches 1.0 — slide 3
-        // then gets clipped as the page scrolls into the next section.
-        style={{ position: "sticky", top: 0, height: "100svh", display: "flex", alignItems: "center", overflow: "hidden", background: "#050505" }}
-      >
-        {/* Left */}
-        <div className="sticky-left" style={{ position: "relative", flex: "0 0 50%", paddingLeft: "5vw", height: "100%", display: "flex", alignItems: "center" }}>
-          {SCROLL_SLIDES.map((slide, i) => (
-            <motion.div key={slide.label} style={{ opacity: opacities[i], position: "absolute", pointerEvents: "none", willChange: "opacity" }}>
-              {/* H2 for each section */}
-              <h2 style={{
-                fontFamily: "var(--font-anton, 'Anton', sans-serif)",
-                fontWeight: 900, fontSize: "clamp(4rem, 10vw, 9rem)",
-                lineHeight: 0.88, textTransform: "uppercase", letterSpacing: "-0.03em", color: "#fff",
+      <Link href={`/events/${event.id}`} style={{ textDecoration: "none", display: "block", height: "100%" }}>
+        <div className="session-card" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+          {/* Image with gradient overlay */}
+          <div style={{ position: "relative", aspectRatio: "3/2", overflow: "hidden" }}>
+            {coverImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={coverImage} alt={event.title} className="session-card-img"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              <div style={{
+                width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center",
+                background: "linear-gradient(145deg, #111 0%, #0a0a0a 100%)",
               }}>
-                <span style={{ display: "block", fontSize: "0.32em", color: "#B6FF00", marginBottom: "0.5rem", letterSpacing: "0.08em" }}>{slide.label}</span>
-                {slide.word}
-                <span style={{ display: "block", fontSize: "0.22em", color: "#4B5563", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase", marginTop: "0.8rem", fontFamily: "var(--font-inter-tight, sans-serif)" }}>
-                  {slide.sub}
-                </span>
-              </h2>
-              <p style={{ fontSize: "0.95rem", color: "#6B7280", lineHeight: 1.6, maxWidth: 360, marginTop: "1.5rem", fontFamily: "var(--font-inter-tight, sans-serif)" }}>
-                {slide.desc}
-              </p>
-            </motion.div>
-          ))}
-        </div>
+                <span style={{ fontSize: "3.5rem", filter: "saturate(0.8)" }}>{emoji}</span>
+              </div>
+            )}
+            {/* Bottom gradient for text readability */}
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0, height: "60%",
+              background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)",
+              pointerEvents: "none",
+            }} />
 
-        {/* Right phone */}
-        <div className="sticky-right" style={{ flex: "0 0 50%", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", height: "100%" }}>
-          <div style={{ position: "absolute", width: 400, height: 400, background: "radial-gradient(circle, rgba(255,100,20,0.1) 0%, rgba(182,255,0,0.04) 50%, transparent 65%)", filter: "blur(40px)", pointerEvents: "none" }} />
-
-          {/* iPhone 17 orange - StickyScroll */}
-          <div style={{ filter: "drop-shadow(0 40px 60px rgba(0,0,0,0.8)) drop-shadow(0 0 30px rgba(255,95,20,0.2))", position: "relative" }}>
-            <div className="sticky-phone-outer" style={{
-              width: 260, height: 540,
-              background: "linear-gradient(160deg, #FF8040 0%, #E85A10 30%, #C94810 55%, #FF6A20 80%, #FF9050 100%)",
-              borderRadius: 48, padding: "2px",
-              boxShadow: "inset 0 1px 0 rgba(255,200,150,0.5), inset 0 -1px 0 rgba(100,30,0,0.4)",
-              position: "relative",
+            {/* Price — top right */}
+            <div style={{
+              position: "absolute", top: 14, right: 14,
+              padding: "5px 12px", borderRadius: 8,
+              background: event.joinPricePence === 0
+                ? "rgba(182,255,0,0.9)" : "rgba(0,0,0,0.7)",
+              backdropFilter: "blur(12px)",
+              color: event.joinPricePence === 0 ? "#0D0D0D" : "#fff",
+              fontSize: "0.72rem", fontWeight: 800, letterSpacing: "0.02em",
             }}>
-              {/* Side buttons */}
-              <div style={{ position: "absolute", left: -3, top: 108, width: 3, height: 32, background: "linear-gradient(to right, #C94810, #E86020)", borderRadius: "2px 0 0 2px" }} />
-              <div style={{ position: "absolute", left: -3, top: 152, width: 3, height: 32, background: "linear-gradient(to right, #C94810, #E86020)", borderRadius: "2px 0 0 2px" }} />
-              <div style={{ position: "absolute", right: -3, top: 136, width: 3, height: 54, background: "linear-gradient(to left, #C94810, #E86020)", borderRadius: "0 2px 2px 0" }} />
+              {price}
+            </div>
 
-              <div className="sticky-phone-inner" style={{
-                width: "100%", height: "100%",
-                background: "#0d0d0d", borderRadius: 46, overflow: "hidden", position: "relative",
-                boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
-                // ✅ Add these two Safari fixes:
-                WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-                transform: "translateZ(0)",
+            {/* Badge — top left */}
+            {badge && badgeStyle && (
+              <div style={{
+                position: "absolute", top: 14, left: 14,
+                padding: "4px 10px", borderRadius: 8,
+                background: badgeStyle.bg, backdropFilter: "blur(12px)",
+                border: `1px solid ${badgeStyle.border}`,
+                color: badgeStyle.color,
+                fontSize: "0.6rem", fontWeight: 800, letterSpacing: "0.06em",
               }}>
-                {/* Dynamic Island */}
-                {/* <div className="sticky-di" style={{ position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", width: 96, height: 28, background: "#000", borderRadius: 18, zIndex: 20, boxShadow: "0 0 0 1px rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.08)" }} />
-                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#1a2a1a" }} />
-                </div> */}
+                {badge}
+              </div>
+            )}
 
-                {SCROLL_SLIDES.map((slide, i) => (
-                  <motion.div key={slide.img + i} style={{ position: "absolute", inset: 0, opacity: opacities[i], willChange: "opacity" }}>
-                    <Image src={slide.img} alt={`Fittrybe app screen — ${slide.sub}`} fill sizes="260px" style={{ objectFit: "cover", objectPosition: "top" }} />
-                  </motion.div>
-                ))}
+            {/* Sport + date overlay at bottom of image */}
+            <div style={{
+              position: "absolute", bottom: 14, left: 14, right: 14,
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "4px 10px", borderRadius: 6,
+                background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)",
+                fontSize: "0.68rem", fontWeight: 600, color: "#fff",
+                textTransform: "capitalize",
+              }}>
+                {emoji} {event.sportId}
+              </span>
+              <span style={{
+                fontSize: "0.68rem", fontWeight: 600, color: "rgba(255,255,255,0.85)",
+              }}>
+                {dayStr} · {timeStr}
+              </span>
+            </div>
+          </div>
 
-                {/* Screen glare */}
-                <div style={{ position: "absolute", inset: 0, zIndex: 10, pointerEvents: "none", background: "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 40%)", borderRadius: 46 }} />
-                <div style={{ position: "absolute", bottom: 8, left: "50%", transform: "translateX(-50%)", width: 80, height: 4, background: "rgba(255,255,255,0.25)", borderRadius: 4, zIndex: 15 }} aria-hidden="true" />
+          {/* Content */}
+          <div style={{ padding: "16px 16px 18px", flex: 1, display: "flex", flexDirection: "column" }}>
+            {/* Title */}
+            <h3 style={{
+              fontFamily: "var(--font-inter-tight, sans-serif)",
+              fontSize: "0.92rem", fontWeight: 700, color: "#fff", marginBottom: 8,
+              lineHeight: 1.35, overflow: "hidden", textOverflow: "ellipsis",
+              display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+            }}>
+              {event.title}
+            </h3>
+
+            {/* Location */}
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 14 }}>
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="rgba(255,255,255,0.3)" style={{ flexShrink: 0 }}>
+                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              </svg>
+              <span style={{
+                fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", fontWeight: 500,
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>
+                {event.locationLabel || event.placeName || event.locationArea}
+              </span>
+            </div>
+
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
+
+            {/* Host + spots row */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)",
+            }}>
+              {/* Host */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                {event.hostAvatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={event.hostAvatar} alt="" style={{
+                    width: 26, height: 26, borderRadius: "50%", objectFit: "cover", flexShrink: 0,
+                    border: event.hostVerified ? "2px solid #B6FF00" : "2px solid rgba(255,255,255,0.08)",
+                  }} />
+                ) : (
+                  <div style={{
+                    width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
+                    background: "linear-gradient(135deg, rgba(182,255,0,0.2), rgba(182,255,0,0.05))",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "0.65rem", fontWeight: 700, color: "#B6FF00",
+                    border: event.hostVerified ? "2px solid #B6FF00" : "2px solid rgba(255,255,255,0.08)",
+                  }}>
+                    {(event.hostName || "?").charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{
+                    fontSize: "0.72rem", fontWeight: 600, color: "rgba(255,255,255,0.7)",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    display: "flex", alignItems: "center", gap: 3,
+                  }}>
+                    {event.hostName || "Host"}
+                    {event.hostVerified && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                        <circle cx="12" cy="12" r="10" fill="#B6FF00"/>
+                        <path d="M9 12.5l2 2 4.5-4.5" stroke="#0D0D0D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div style={{ fontSize: "0.62rem", color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
+                    {event.hostVerified ? "Verified Host" : "Host"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Spots indicator */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                <div style={{
+                  fontSize: "0.65rem", fontWeight: 700,
+                  color: event.spotsLeft <= 3 ? "#FB923C" : "rgba(255,255,255,0.5)",
+                }}>
+                  {event.spotsLeft > 0 ? `${event.spotsLeft} spot${event.spotsLeft === 1 ? "" : "s"} left` : "Full"}
+                </div>
+                <div style={{ width: 48, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+                  <motion.div
+                    initial={{ width: 0 }}
+                    whileInView={{ width: `${fillPercent}%` }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: 0.2 + index * 0.04, ease: "easeOut" }}
+                    style={{
+                      height: "100%", borderRadius: 2,
+                      background: event.spotsLeft <= 3 ? "#FB923C" : "#B6FF00",
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </Link>
+    </motion.div>
+  );
+}
 
-        {/* Progress dots */}
-        <div role="tablist" aria-label="Slide indicator" style={{ position: "absolute", bottom: 40, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 10, zIndex: 20 }}>
-          {SCROLL_SLIDES.map((slide, i) => (
-            <div key={i} role="tab" aria-selected={i === activeSlide} aria-label={`Slide ${i + 1}: ${slide.word}`} style={{ width: i === activeSlide ? 24 : 6, height: 6, borderRadius: 3, background: i === activeSlide ? "#B6FF00" : "rgba(255,255,255,0.15)", transition: "width 0.4s ease, background 0.4s ease" }} />
+function SessionsNearYou() {
+  const [sessions, setSessions] = useState<SessionWithHost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedSport, setSelectedSport] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      setLoading(true);
+
+      const todayUTC = new Date().toISOString().split("T")[0];
+
+      let query = supabase
+        .from("sessions")
+        .select(`
+          id, host_id, sport_id, title, location_area, location_label,
+          starts_at, place_name, place_vicinity, place_lat, place_lng,
+          place_rating, banner_url, place_photo_url, status, created_at,
+          is_cancelled, cancellation_reason, is_featured,
+          participants_count, comments_count, views_count, spots_left,
+          join_price_pence, payment_method, is_partner_session, partner_id,
+          is_recurring, parent_session_id,
+          running_details(*), racket_details(*), football_details(*),
+          basketball_details(*), cycling_details(*), gym_details(*)
+        `)
+        .gte("starts_at", todayUTC)
+        .eq("is_cancelled", false)
+        .not("status", "in", "(cancelled,completed,draft,pre_approved)")
+        .order("starts_at", { ascending: true })
+        .limit(30);
+
+      if (selectedLocation) {
+        query = query.ilike("location_area", `%${selectedLocation}%`);
+      }
+      if (selectedSport) {
+        query = query.eq("sport_id", selectedSport);
+      }
+
+      const { data: rawSessions } = await query;
+      if (!rawSessions || rawSessions.length === 0) {
+        setSessions([]);
+        setLoading(false);
+        return;
+      }
+
+      // Dedup recurring sessions — keep nearest per parent
+      const seen = new Set<string>();
+      const deduped = rawSessions.filter(s => {
+        const key = s.parent_session_id || s.id;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      // Fetch host profiles
+      const hostIds = [...new Set(deduped.map(s => s.host_id).filter(Boolean))];
+      const { data: hosts } = hostIds.length > 0
+        ? await supabase.from("profiles").select("id, full_name, avatar_url, is_verified").in("id", hostIds)
+        : { data: [] };
+      const hostMap = new Map((hosts ?? []).map(h => [h.id, h]));
+
+      // Map to SessionWithHost
+      const mapped: SessionWithHost[] = deduped.map(row => {
+        const host = hostMap.get(row.host_id);
+        const event: FittrybeEvent = {
+          id: row.id,
+          title: row.title,
+          sportId: row.sport_id,
+          locationArea: row.location_area ?? "",
+          locationLabel: row.location_label ?? "",
+          placeName: row.place_name ?? "",
+          placeVicinity: row.place_vicinity ?? "",
+          placeLat: row.place_lat ?? "",
+          placeLng: row.place_lng ?? "",
+          placeRating: row.place_rating ?? null,
+          placePhotoUrl: row.place_photo_url ?? null,
+          bannerUrl: row.banner_url ?? null,
+          startsAt: row.starts_at,
+          status: row.status ?? "upcoming",
+          isCancelled: row.is_cancelled ?? false,
+          cancellationReason: row.cancellation_reason ?? null,
+          spotsLeft: row.spots_left ?? 0,
+          joinPricePence: row.join_price_pence ?? 0,
+          paymentMethod: row.payment_method ?? "cash",
+          isRecurring: row.is_recurring ?? false,
+          parentSessionId: row.parent_session_id ?? null,
+          participantsCount: row.participants_count ?? 0,
+          viewsCount: row.views_count ?? 0,
+          isFeatured: row.is_featured ?? false,
+          hostId: row.host_id,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at ?? null,
+          description: null,
+        };
+        return {
+          ...event,
+          hostName: host?.full_name ?? null,
+          hostAvatar: host?.avatar_url ?? null,
+          hostVerified: host?.is_verified ?? false,
+          badge: getBadge(event),
+          commentsCount: row.comments_count ?? 0,
+        };
+      });
+
+      // Sort by engagement score for display
+      const scored = mapped.map(s => {
+        let score = (s.participantsCount * 3) + (s.commentsCount) + (s.viewsCount * 0.1);
+        if (s.spotsLeft <= 2) score += 15;
+        if (s.isFeatured) score += 20;
+        return { ...s, _score: score };
+      });
+      scored.sort((a, b) => b._score - a._score);
+
+      setSessions(scored.slice(0, 12));
+      setLoading(false);
+    };
+    fetchSessions();
+  }, [selectedLocation, selectedSport]);
+
+  // Auto-scroll to start on filter change (mobile)
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+  }, [selectedLocation, selectedSport]);
+
+  return (
+    <section
+      id="sessions-near-you"
+      aria-label="Upcoming sports sessions near you this week"
+      style={{ padding: "100px 0", background: "#050505", position: "relative", overflow: "hidden" }}
+    >
+      {/* Background glow */}
+      <div style={{
+        position: "absolute", top: "30%", left: "20%", width: 500, height: 500,
+        background: "radial-gradient(circle, rgba(182,255,0,0.04) 0%, transparent 70%)",
+        pointerEvents: "none", filter: "blur(80px)",
+      }} />
+      <div style={{
+        position: "absolute", bottom: "10%", right: "10%", width: 400, height: 400,
+        background: "radial-gradient(circle, rgba(255,100,20,0.03) 0%, transparent 70%)",
+        pointerEvents: "none", filter: "blur(60px)",
+      }} />
+
+      {/* Header */}
+      <div style={{ padding: "0 5vw", marginBottom: 40, position: "relative" }}>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <span style={{
+              width: 8, height: 8, borderRadius: "50%", background: "#B6FF00",
+              display: "inline-block", animation: "blink 2s infinite",
+            }} />
+            <span style={{
+              fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em",
+              textTransform: "uppercase", color: "#B6FF00",
+            }}>
+              UPCOMING THIS WEEK
+            </span>
+          </div>
+          <h2 style={{
+            fontFamily: "var(--font-anton, 'Anton', sans-serif)",
+            fontSize: "clamp(2.2rem, 5vw, 4.5rem)", fontWeight: 900,
+            textTransform: "uppercase", letterSpacing: "-0.02em", lineHeight: 1,
+            color: "#fff", marginBottom: 10,
+          }}>
+            SESSIONS NEAR{" "}
+            <span style={{
+              color: "#B6FF00",
+              textShadow: "0 0 30px rgba(182,255,0,0.3)",
+            }}>
+              {selectedLocation ? selectedLocation.toUpperCase() : "YOU"}
+            </span>
+          </h2>
+          <p style={{
+            fontSize: "0.9rem", color: "#4B5563", maxWidth: 480,
+            fontFamily: "var(--font-inter-tight, sans-serif)", lineHeight: 1.5,
+          }}>
+            Upcoming sessions this week{selectedLocation ? ` in ${selectedLocation}` : ""}. Pick your area, find a game, and show up.
+          </p>
+        </motion.div>
+
+        {/* Desktop filters */}
+        <motion.div
+          className="sessions-filters"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          style={{ marginTop: 32, flexDirection: "column", gap: 16 }}
+        >
+          {/* Location row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{
+              fontSize: "0.65rem", fontWeight: 700, color: "rgba(255,255,255,0.25)",
+              letterSpacing: "0.1em", textTransform: "uppercase", minWidth: 52,
+            }}>
+              Area
+            </span>
+            <div style={{ display: "flex", gap: 6 }}>
+              {LOCATION_OPTIONS.map(loc => (
+                <button
+                  key={loc.label}
+                  onClick={() => setSelectedLocation(loc.query)}
+                  className={`filter-chip ${selectedLocation === loc.query ? "filter-chip-active" : ""}`}
+                >
+                  {loc.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Sport row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{
+              fontSize: "0.65rem", fontWeight: 700, color: "rgba(255,255,255,0.25)",
+              letterSpacing: "0.1em", textTransform: "uppercase", minWidth: 52,
+            }}>
+              Sport
+            </span>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {SPORT_FILTERS.map(sport => (
+                <button
+                  key={sport.label}
+                  onClick={() => setSelectedSport(sport.id)}
+                  className={`sport-chip ${selectedSport === sport.id ? "sport-chip-active" : ""}`}
+                >
+                  <span style={{ marginRight: 4 }}>{sport.emoji}</span>{sport.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Mobile: filter pills (horizontal scroll) */}
+        <div className="sessions-scroll-mobile" style={{ marginTop: 20, paddingBottom: 4, gap: 8 }}>
+          {LOCATION_OPTIONS.map(loc => (
+            <button
+              key={loc.label}
+              onClick={() => setSelectedLocation(loc.query)}
+              className={`filter-chip ${selectedLocation === loc.query ? "filter-chip-active" : ""}`}
+              style={{ flex: "0 0 auto" }}
+            >
+              {loc.label}
+            </button>
+          ))}
+          <div style={{ width: 1, height: 24, background: "rgba(255,255,255,0.08)", flexShrink: 0, margin: "0 4px", alignSelf: "center" }} />
+          {SPORT_FILTERS.filter(s => s.id !== null).map(sport => (
+            <button
+              key={sport.label}
+              onClick={() => setSelectedSport(selectedSport === sport.id ? null : sport.id)}
+              className={`sport-chip ${selectedSport === sport.id ? "sport-chip-active" : ""}`}
+              style={{ flex: "0 0 auto" }}
+            >
+              {sport.emoji} {sport.label}
+            </button>
           ))}
         </div>
       </div>
+
+      {/* Loading skeleton */}
+      {loading && (
+        <div style={{ padding: "0 5vw" }}>
+          <div className="sessions-grid" style={{ maxWidth: 1200, margin: "0 auto" }}>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{
+                background: "#111", borderRadius: 16, overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.05)",
+              }}>
+                <div style={{
+                  aspectRatio: "3/2",
+                  background: "linear-gradient(90deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 75%)",
+                  backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite",
+                }} />
+                <div style={{ padding: 16 }}>
+                  <div style={{ height: 14, width: "80%", borderRadius: 6, background: "rgba(255,255,255,0.04)", marginBottom: 8 }} />
+                  <div style={{ height: 10, width: "50%", borderRadius: 5, background: "rgba(255,255,255,0.03)", marginBottom: 16 }} />
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(255,255,255,0.04)" }} />
+                    <div style={{ height: 10, width: 80, borderRadius: 5, background: "rgba(255,255,255,0.03)" }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sessions — Desktop grid */}
+      {!loading && sessions.length > 0 && (
+        <div style={{ padding: "0 5vw" }}>
+          <div className="sessions-grid" style={{ maxWidth: 1200, margin: "0 auto" }}>
+            {sessions.slice(0, 6).map((event, i) => (
+              <SessionCard key={event.id} event={event} index={i} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sessions — Mobile horizontal scroll */}
+      {!loading && sessions.length > 0 && (
+        <div className="sessions-scroll-mobile" ref={scrollRef}>
+          {sessions.map((event, i) => (
+            <SessionCard key={event.id} event={event} index={i} />
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && sessions.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          style={{ textAlign: "center", padding: "60px 5vw" }}
+        >
+          <div style={{
+            width: 80, height: 80, borderRadius: "50%", margin: "0 auto 20px",
+            background: "rgba(182,255,0,0.05)", border: "1px solid rgba(182,255,0,0.15)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "2rem",
+          }}>
+            🏟️
+          </div>
+          <p style={{ fontSize: "1.1rem", color: "#6B7280", fontWeight: 600 }}>
+            No sessions in {selectedLocation || "your area"} right now
+          </p>
+          <p style={{ fontSize: "0.85rem", color: "#374151", marginTop: 8, maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
+            New games drop daily. Try another area or download the app to get notified.
+          </p>
+          <div style={{ marginTop: 24, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+            {LOCATION_OPTIONS.filter(l => l.query && l.query !== selectedLocation).slice(0, 3).map(loc => (
+              <button
+                key={loc.label}
+                onClick={() => setSelectedLocation(loc.query)}
+                style={{
+                  padding: "8px 16px", borderRadius: 10, cursor: "pointer",
+                  border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)",
+                  color: "#9CA3AF", fontSize: "0.78rem", fontWeight: 600,
+                  transition: "all 0.2s ease",
+                }}
+              >
+                Try {loc.label}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* View all CTA */}
+      {!loading && sessions.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          style={{ textAlign: "center", marginTop: 48 }}
+        >
+          <Link
+            href="/events"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "14px 28px", borderRadius: 12,
+              border: "1.5px solid rgba(182,255,0,0.3)",
+              background: "rgba(182,255,0,0.05)",
+              color: "#B6FF00", fontWeight: 700, fontSize: "0.85rem",
+              letterSpacing: "0.05em", textTransform: "uppercase",
+              textDecoration: "none", transition: "all 0.3s ease",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = "rgba(182,255,0,0.12)";
+              e.currentTarget.style.borderColor = "rgba(182,255,0,0.5)";
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 8px 32px rgba(182,255,0,0.15)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "rgba(182,255,0,0.05)";
+              e.currentTarget.style.borderColor = "rgba(182,255,0,0.3)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            Explore All Sessions <IconArrowRight size={14} />
+          </Link>
+        </motion.div>
+      )}
     </section>
   );
 }
@@ -845,6 +1507,460 @@ const SPORT_EMOJIS = [
   { emoji: "🥊", label: "Boxing", delay: 1.1 },
 ];
 
+// ─── COMMUNITY SECTION ───────────────────────────────────────────────────────
+function CommunitySection() {
+  const words = ["THEIR SPORT", "THEIR PEOPLE", "THEIR CITY"];
+  const [wordIndex, setWordIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWordIndex(prev => (prev + 1) % words.length);
+    }, 2800);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <section
+      aria-label="Meet people who love sport"
+      style={{
+        position: "relative", overflow: "hidden",
+        background: "#050505",
+        padding: "0",
+        minHeight: "100vh",
+        display: "flex", alignItems: "stretch",
+      }}
+    >
+      {/* Full section layout */}
+      <div className="community-section-inner" style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        width: "100%",
+        minHeight: "100vh",
+      }}>
+        {/* Left — Copy */}
+        <div style={{
+          display: "flex", flexDirection: "column", justifyContent: "center",
+          padding: "80px 5vw 80px 6vw",
+          position: "relative",
+        }}>
+          {/* Decorative glow */}
+          <div style={{
+            position: "absolute", top: "20%", left: "-10%", width: 400, height: 400,
+            background: "radial-gradient(circle, rgba(182,255,0,0.06) 0%, transparent 70%)",
+            filter: "blur(80px)", pointerEvents: "none",
+          }} />
+
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            style={{ position: "relative", zIndex: 1 }}
+          >
+            <p style={{
+              fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.14em",
+              textTransform: "uppercase", color: "#B6FF00", marginBottom: 20,
+            }}>
+              MORE THAN AN APP
+            </p>
+
+            <h2 style={{
+              fontFamily: "var(--font-anton, 'Anton', sans-serif)",
+              fontSize: "clamp(2.5rem, 5.5vw, 5rem)", fontWeight: 900,
+              textTransform: "uppercase", letterSpacing: "-0.02em",
+              lineHeight: 1.05, color: "#fff", marginBottom: 24,
+            }}>
+              MEET PEOPLE<br />
+              WHO LOVE<br />
+              <span style={{ position: "relative", display: "inline-block", minWidth: 200 }}>
+                <span
+                  key={words[wordIndex]}
+                  className="flip-word-enter"
+                  style={{
+                    color: "#B6FF00",
+                    textShadow: "0 0 40px rgba(182,255,0,0.3)",
+                    display: "inline-block",
+                  }}
+                >
+                  {words[wordIndex]}
+                </span>
+              </span>
+            </h2>
+
+            <p style={{
+              fontSize: "1.05rem", color: "#6B7280", lineHeight: 1.7,
+              maxWidth: 420, fontFamily: "var(--font-inter-tight, sans-serif)",
+              marginBottom: 36,
+            }}>
+              Fittrybe isn&apos;t just about finding a game — it&apos;s about finding your people.
+              The ones who&apos;ll save you a spot, push your limits, and grab food after.
+            </p>
+
+            {/* Social proof stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              style={{ display: "flex", gap: 32, marginBottom: 40 }}
+            >
+              {[
+                { value: "10+", label: "Sports" },
+                { value: "6", label: "Local areas" },
+                { value: "100%", label: "Free to join" },
+              ].map(stat => (
+                <div key={stat.label}>
+                  <div style={{
+                    fontFamily: "var(--font-anton, 'Anton', sans-serif)",
+                    fontSize: "1.8rem", fontWeight: 900, color: "#fff",
+                    lineHeight: 1,
+                  }}>
+                    {stat.value}
+                  </div>
+                  <div style={{
+                    fontSize: "0.7rem", color: "#4B5563", fontWeight: 600,
+                    letterSpacing: "0.05em", textTransform: "uppercase", marginTop: 4,
+                  }}>
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+
+            {/* CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <SmartDownloadLink className="community-cta-btn" style={{
+                display: "inline-flex", alignItems: "center", gap: 10,
+                padding: "16px 32px", borderRadius: 14,
+                background: "#B6FF00", color: "#0D0D0D",
+                fontFamily: "var(--font-anton, 'Anton', sans-serif)",
+                fontSize: "0.95rem", fontWeight: 800, letterSpacing: "0.05em",
+                textTransform: "uppercase", textDecoration: "none",
+                transition: "all 0.3s ease",
+                boxShadow: "0 0 0 0 rgba(182,255,0,0)",
+              }}>
+                Find Your Tribe
+                <IconArrowRight size={16} color="#0D0D0D" />
+              </SmartDownloadLink>
+            </motion.div>
+          </motion.div>
+        </div>
+
+        {/* Right — Image */}
+        <div style={{
+          position: "relative",
+          display: "flex", alignItems: "flex-end", justifyContent: "center",
+          overflow: "hidden",
+        }}>
+          {/* Background gradient behind image */}
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, right: 0, height: "70%",
+            background: "linear-gradient(to top, rgba(182,255,0,0.06) 0%, transparent 100%)",
+            pointerEvents: "none",
+          }} />
+
+          {/* Floating accent circles */}
+          <motion.div
+            animate={{ y: [-10, 10, -10], rotate: [0, 5, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            style={{
+              position: "absolute", top: "15%", right: "10%",
+              width: 80, height: 80, borderRadius: "50%",
+              border: "2px solid rgba(182,255,0,0.15)",
+              pointerEvents: "none",
+            }}
+          />
+          <motion.div
+            animate={{ y: [8, -12, 8], rotate: [0, -3, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            style={{
+              position: "absolute", top: "35%", left: "5%",
+              width: 48, height: 48, borderRadius: "50%",
+              background: "rgba(182,255,0,0.08)",
+              pointerEvents: "none",
+            }}
+          />
+          <motion.div
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            style={{
+              position: "absolute", top: "25%", right: "30%",
+              width: 12, height: 12, borderRadius: "50%",
+              background: "#B6FF00",
+              pointerEvents: "none",
+            }}
+          />
+
+          {/* The image */}
+          <motion.div
+            initial={{ opacity: 0, y: 60, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+            style={{ position: "relative", zIndex: 2, width: "90%", maxWidth: 550 }}
+          >
+            <Image
+              src="/web_img.png"
+              alt="Two friends relaxing after a badminton session — the Fittrybe community"
+              width={550}
+              height={700}
+              style={{
+                width: "100%", height: "auto",
+                objectFit: "contain", objectPosition: "bottom",
+                filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.3))",
+              }}
+              sizes="(max-width: 768px) 90vw, 45vw"
+            />
+          </motion.div>
+
+          {/* Floating quote card */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            style={{
+              position: "absolute", top: "12%", left: "5%",
+              padding: "16px 20px", borderRadius: 16,
+              background: "rgba(13,13,13,0.85)", backdropFilter: "blur(20px)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              maxWidth: 220, zIndex: 3,
+            }}
+          >
+            <p style={{
+              fontSize: "0.78rem", color: "rgba(255,255,255,0.7)",
+              fontStyle: "italic", lineHeight: 1.5, marginBottom: 8,
+              fontFamily: "var(--font-inter-tight, sans-serif)",
+            }}>
+              &ldquo;Found my weekly badminton crew through Fittrybe. Best decision ever.&rdquo;
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{
+                width: 20, height: 20, borderRadius: "50%",
+                background: "linear-gradient(135deg, #B6FF00, #7acc00)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "0.55rem", fontWeight: 800, color: "#0D0D0D",
+              }}>
+                S
+              </div>
+              <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>
+                Sarah, Redhill
+              </span>
+            </div>
+          </motion.div>
+
+          {/* Activity badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.8, type: "spring", stiffness: 200 }}
+            style={{
+              position: "absolute", bottom: "18%", right: "5%",
+              padding: "12px 18px", borderRadius: 14,
+              background: "rgba(13,13,13,0.85)", backdropFilter: "blur(20px)",
+              border: "1px solid rgba(182,255,0,0.15)",
+              zIndex: 3, display: "flex", alignItems: "center", gap: 10,
+            }}
+          >
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: "rgba(182,255,0,0.1)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "1.2rem",
+            }}>
+              🏸
+            </div>
+            <div>
+              <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#fff" }}>
+                Game On!
+              </div>
+              <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>
+                3 sessions this week
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Mobile responsive styles are in globalStyles */}
+    </section>
+  );
+}
+
+// ─── Video Testimonials ──────────────────────────────────────────────────────
+function VideoTestimonials() {
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const [playing, setPlaying] = useState<number | null>(null);
+
+  const testimonials = [
+    {
+      src: "/community.mp4",
+      name: "The Fittrybe Community",
+      caption: "Real players. Real sessions. Real energy.",
+    },
+    {
+      src: "/community1.mp4",
+      name: "Game Day Vibes",
+      caption: "This is what showing up looks like.",
+    },
+  ];
+
+  const handleToggle = (index: number) => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+
+    if (playing === index) {
+      video.pause();
+      setPlaying(null);
+    } else {
+      // Pause any currently playing video
+      if (playing !== null && videoRefs.current[playing]) {
+        videoRefs.current[playing]!.pause();
+      }
+      video.play();
+      setPlaying(index);
+    }
+  };
+
+  return (
+    <section
+      aria-label="Community video testimonials"
+      style={{
+        padding: "100px 5vw",
+        background: "#050505",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Background glow */}
+      <div style={{
+        position: "absolute", top: "30%", left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: 600, height: 600,
+        background: "radial-gradient(circle, rgba(182,255,0,0.04) 0%, transparent 70%)",
+        filter: "blur(100px)", pointerEvents: "none",
+      }} />
+
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        style={{ textAlign: "center", marginBottom: 56, position: "relative", zIndex: 1 }}
+      >
+        <p style={{
+          fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.14em",
+          textTransform: "uppercase", color: "#B6FF00", marginBottom: 16,
+        }}>
+          FROM THE FIELD
+        </p>
+        <h2 style={{
+          fontFamily: "var(--font-anton, 'Anton', sans-serif)",
+          fontSize: "clamp(2.2rem, 5.5vw, 4.5rem)", fontWeight: 900,
+          textTransform: "uppercase", letterSpacing: "-0.02em",
+          lineHeight: 1.05, color: "#fff",
+        }}>
+          SEE THE <span style={{ color: "#B6FF00" }}>ENERGY</span>
+        </h2>
+        <p style={{
+          fontSize: "1rem", color: "#6B7280", lineHeight: 1.7,
+          maxWidth: 480, margin: "16px auto 0",
+          fontFamily: "var(--font-inter-tight, sans-serif)",
+        }}>
+          Real moments from real players. This is what it looks like when your tribe links up.
+        </p>
+      </motion.div>
+
+      <div className="video-testimonials-grid" style={{ position: "relative", zIndex: 1 }}>
+        {testimonials.map((t, i) => (
+          <motion.div
+            key={t.src}
+            className="video-card"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.7, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] }}
+            onClick={() => handleToggle(i)}
+          >
+            <video
+              ref={(el) => { videoRefs.current[i] = el; }}
+              src={t.src}
+              playsInline
+              loop
+              muted
+              preload="metadata"
+              aria-label={t.name}
+              onEnded={() => setPlaying(null)}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            >
+              <track kind="descriptions" label="Video description" />
+            </video>
+
+            <div className="video-card-overlay" />
+
+            {/* Play button */}
+            <div className={`video-play-btn ${playing === i ? "is-playing" : ""}`}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#0D0D0D" aria-hidden="true">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+
+            {/* Bottom info */}
+            <div className="video-card-info">
+              <p style={{
+                fontFamily: "var(--font-anton, 'Anton', sans-serif)",
+                fontSize: "1.1rem", fontWeight: 800, color: "#fff",
+                textTransform: "uppercase", letterSpacing: "0.02em",
+                marginBottom: 4,
+                textShadow: "0 2px 8px rgba(0,0,0,0.5)",
+              }}>
+                {t.name}
+              </p>
+              <p style={{
+                fontSize: "0.78rem", color: "rgba(255,255,255,0.7)",
+                fontFamily: "var(--font-inter-tight, sans-serif)",
+                fontWeight: 500,
+              }}>
+                {t.caption}
+              </p>
+            </div>
+
+            {/* Live badge on first video */}
+            {i === 0 && (
+              <div style={{
+                position: "absolute", top: 16, left: 16, zIndex: 5,
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "6px 12px", borderRadius: 20,
+                background: "rgba(0,0,0,0.6)", backdropFilter: "blur(12px)",
+                border: "1px solid rgba(182,255,0,0.2)",
+              }}>
+                <div style={{
+                  width: 6, height: 6, borderRadius: "50%",
+                  background: "#B6FF00",
+                  animation: "blink 1.5s infinite",
+                }} />
+                <span style={{
+                  fontSize: "0.6rem", fontWeight: 700, color: "#B6FF00",
+                  textTransform: "uppercase", letterSpacing: "0.1em",
+                }}>
+                  Community
+                </span>
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function BentoGrid() {
   const [playerCount, setPlayerCount] = useState(0);
   useEffect(() => {
@@ -854,7 +1970,7 @@ function BentoGrid() {
         // "players on Fittrybe" number. Either table being unavailable just
         // falls through to 0 and the +100 floor still gives a friendly value.
         const [usersRes, waitlistRes] = await Promise.allSettled([
-          supabase.from("users").select("*", { count: "exact", head: true }),
+          supabase.from("profiles").select("*", { count: "exact", head: true }),
           supabase.from("waitlist").select("*", { count: "exact", head: true }),
         ]);
         const users = usersRes.status === "fulfilled" ? usersRes.value.count ?? 0 : 0;
@@ -1362,7 +2478,9 @@ export default function LandingPageClient({
       <Navbar />
       <main id="main-content">
         <HeroSection />
-        <StickyScrollStory />
+        <SessionsNearYou />
+        <CommunitySection />
+        <VideoTestimonials />
         <BentoGrid />
         <BlogPreviewSection />
         <FAQSection faqs={faqs} />
