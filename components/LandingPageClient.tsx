@@ -112,6 +112,7 @@ const globalStyles = `*, *::before, *::after { box-sizing: border-box; margin: 0
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
   }
+  @keyframes flipIn {
     0% { transform: rotateX(-90deg) translateY(8px); opacity: 0; }
     100% { transform: rotateX(0deg) translateY(0px); opacity: 1; }
   }
@@ -1507,6 +1508,106 @@ const SPORT_EMOJIS = [
   { emoji: "🥊", label: "Boxing", delay: 1.1 },
 ];
 
+// ─── Community Flip Videos ───────────────────────────────────────────────────
+const COMMUNITY_VIDEOS = [
+  "/videos/community-1.mp4",
+  "/videos/community-2.mp4",
+];
+
+function CommunityFlipVideos() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex(prev => (prev + 1) % COMMUNITY_VIDEOS.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Auto-play all videos so they're ready when flipped to
+  useEffect(() => {
+    videoRefs.current.forEach(v => {
+      if (v) { v.muted = true; v.play().catch(() => {}); }
+    });
+  }, []);
+
+  return (
+    <div style={{
+      position: "relative",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      overflow: "hidden", perspective: "1200px",
+    }}>
+      {/* Ambient glow */}
+      <div style={{
+        position: "absolute", width: 400, height: 400,
+        background: "radial-gradient(circle, rgba(182,255,0,0.08) 0%, transparent 70%)",
+        filter: "blur(60px)", top: "50%", left: "50%",
+        transform: "translate(-50%, -50%)", pointerEvents: "none",
+      }} />
+
+      <motion.div
+        initial={{ opacity: 0, y: 60, scale: 0.95 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+        style={{
+          position: "relative", zIndex: 2,
+          width: "85%", maxWidth: 420, aspectRatio: "9 / 14",
+          borderRadius: 28, overflow: "hidden",
+          boxShadow: "0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)",
+        }}
+      >
+        {COMMUNITY_VIDEOS.map((src, i) => (
+          <div
+            key={src}
+            style={{
+              position: "absolute", inset: 0,
+              backfaceVisibility: "hidden",
+              transition: "opacity 0.8s ease, transform 0.8s ease",
+              opacity: activeIndex === i ? 1 : 0,
+              transform: activeIndex === i ? "rotateY(0deg)" : "rotateY(90deg)",
+            }}
+          >
+            <video
+              ref={el => { videoRefs.current[i] = el; }}
+              autoPlay muted loop playsInline
+              style={{
+                width: "100%", height: "100%",
+                objectFit: "cover", display: "block",
+              }}
+            >
+              <source src={src} type="video/mp4" />
+              <track kind="captions" />
+            </video>
+          </div>
+        ))}
+
+        {/* Progress dots */}
+        <div style={{
+          position: "absolute", bottom: 16, left: "50%",
+          transform: "translateX(-50%)", zIndex: 5,
+          display: "flex", gap: 8,
+        }}>
+          {COMMUNITY_VIDEOS.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: activeIndex === i ? 24 : 8, height: 8,
+                borderRadius: 4,
+                background: activeIndex === i ? "#B6FF00" : "rgba(255,255,255,0.3)",
+                transition: "all 0.4s ease",
+                cursor: "pointer",
+              }}
+              onClick={() => setActiveIndex(i)}
+            />
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ─── COMMUNITY SECTION ───────────────────────────────────────────────────────
 function CommunitySection() {
   const words = ["THEIR SPORT", "THEIR PEOPLE", "THEIR CITY"];
@@ -1652,141 +1753,8 @@ function CommunitySection() {
           </motion.div>
         </div>
 
-        {/* Right — Image */}
-        <div style={{
-          position: "relative",
-          display: "flex", alignItems: "flex-end", justifyContent: "center",
-          overflow: "hidden",
-        }}>
-          {/* Background gradient behind image */}
-          <div style={{
-            position: "absolute", bottom: 0, left: 0, right: 0, height: "70%",
-            background: "linear-gradient(to top, rgba(182,255,0,0.06) 0%, transparent 100%)",
-            pointerEvents: "none",
-          }} />
-
-          {/* Floating accent circles */}
-          <motion.div
-            animate={{ y: [-10, 10, -10], rotate: [0, 5, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            style={{
-              position: "absolute", top: "15%", right: "10%",
-              width: 80, height: 80, borderRadius: "50%",
-              border: "2px solid rgba(182,255,0,0.15)",
-              pointerEvents: "none",
-            }}
-          />
-          <motion.div
-            animate={{ y: [8, -12, 8], rotate: [0, -3, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            style={{
-              position: "absolute", top: "35%", left: "5%",
-              width: 48, height: 48, borderRadius: "50%",
-              background: "rgba(182,255,0,0.08)",
-              pointerEvents: "none",
-            }}
-          />
-          <motion.div
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            style={{
-              position: "absolute", top: "25%", right: "30%",
-              width: 12, height: 12, borderRadius: "50%",
-              background: "#B6FF00",
-              pointerEvents: "none",
-            }}
-          />
-
-          {/* The image */}
-          <motion.div
-            initial={{ opacity: 0, y: 60, scale: 0.95 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-            style={{ position: "relative", zIndex: 2, width: "90%", maxWidth: 550 }}
-          >
-            <Image
-              src="/web_img.png"
-              alt="Two friends relaxing after a badminton session — the Fittrybe community"
-              width={550}
-              height={700}
-              style={{
-                width: "100%", height: "auto",
-                objectFit: "contain", objectPosition: "bottom",
-                filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.3))",
-              }}
-              sizes="(max-width: 768px) 90vw, 45vw"
-            />
-          </motion.div>
-
-          {/* Floating quote card */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            style={{
-              position: "absolute", top: "12%", left: "5%",
-              padding: "16px 20px", borderRadius: 16,
-              background: "rgba(13,13,13,0.85)", backdropFilter: "blur(20px)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              maxWidth: 220, zIndex: 3,
-            }}
-          >
-            <p style={{
-              fontSize: "0.78rem", color: "rgba(255,255,255,0.7)",
-              fontStyle: "italic", lineHeight: 1.5, marginBottom: 8,
-              fontFamily: "var(--font-inter-tight, sans-serif)",
-            }}>
-              &ldquo;Found my weekly badminton crew through Fittrybe. Best decision ever.&rdquo;
-            </p>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <div style={{
-                width: 20, height: 20, borderRadius: "50%",
-                background: "linear-gradient(135deg, #B6FF00, #7acc00)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "0.55rem", fontWeight: 800, color: "#0D0D0D",
-              }}>
-                S
-              </div>
-              <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>
-                Sarah, Redhill
-              </span>
-            </div>
-          </motion.div>
-
-          {/* Activity badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.8, type: "spring", stiffness: 200 }}
-            style={{
-              position: "absolute", bottom: "18%", right: "5%",
-              padding: "12px 18px", borderRadius: 14,
-              background: "rgba(13,13,13,0.85)", backdropFilter: "blur(20px)",
-              border: "1px solid rgba(182,255,0,0.15)",
-              zIndex: 3, display: "flex", alignItems: "center", gap: 10,
-            }}
-          >
-            <div style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: "rgba(182,255,0,0.1)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "1.2rem",
-            }}>
-              🏸
-            </div>
-            <div>
-              <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#fff" }}>
-                Game On!
-              </div>
-              <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>
-                3 sessions this week
-              </div>
-            </div>
-          </motion.div>
-        </div>
+        {/* Right — Flipping Videos */}
+        <CommunityFlipVideos />
       </div>
 
       {/* Mobile responsive styles are in globalStyles */}
@@ -1794,23 +1762,23 @@ function CommunitySection() {
   );
 }
 
-// ─── Video Testimonials ──────────────────────────────────────────────────────
+// ─── Video Reviews ──────────────────────────────────────────────────────────
+const VIDEO_REVIEWS = [
+  {
+    src: "/videos/review-1.mp4",
+    name: "Player Review",
+    caption: "Hear what our players have to say.",
+  },
+  {
+    src: "/videos/review-2.mp4",
+    name: "Player Review",
+    caption: "Real stories from real players.",
+  },
+];
+
 function VideoTestimonials() {
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const [playing, setPlaying] = useState<number | null>(null);
-
-  const testimonials = [
-    {
-      src: "/community.mp4",
-      name: "The Fittrybe Community",
-      caption: "Real players. Real sessions. Real energy.",
-    },
-    {
-      src: "/community1.mp4",
-      name: "Game Day Vibes",
-      caption: "This is what showing up looks like.",
-    },
-  ];
 
   const handleToggle = (index: number) => {
     const video = videoRefs.current[index];
@@ -1831,7 +1799,7 @@ function VideoTestimonials() {
 
   return (
     <section
-      aria-label="Community video testimonials"
+      aria-label="Video reviews from Fittrybe players"
       style={{
         padding: "100px 5vw",
         background: "#050505",
@@ -1859,7 +1827,7 @@ function VideoTestimonials() {
           fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.14em",
           textTransform: "uppercase", color: "#B6FF00", marginBottom: 16,
         }}>
-          FROM THE FIELD
+          PLAYER REVIEWS
         </p>
         <h2 style={{
           fontFamily: "var(--font-anton, 'Anton', sans-serif)",
@@ -1867,19 +1835,19 @@ function VideoTestimonials() {
           textTransform: "uppercase", letterSpacing: "-0.02em",
           lineHeight: 1.05, color: "#fff",
         }}>
-          SEE THE <span style={{ color: "#B6FF00" }}>ENERGY</span>
+          HEAR IT FROM <span style={{ color: "#B6FF00" }}>THEM</span>
         </h2>
         <p style={{
           fontSize: "1rem", color: "#6B7280", lineHeight: 1.7,
           maxWidth: 480, margin: "16px auto 0",
           fontFamily: "var(--font-inter-tight, sans-serif)",
         }}>
-          Real moments from real players. This is what it looks like when your tribe links up.
+          Don&apos;t take our word for it. Real players sharing their Fittrybe experience.
         </p>
       </motion.div>
 
       <div className="video-testimonials-grid" style={{ position: "relative", zIndex: 1 }}>
-        {testimonials.map((t, i) => (
+        {VIDEO_REVIEWS.map((t, i) => (
           <motion.div
             key={t.src}
             className="video-card"
@@ -1932,28 +1900,26 @@ function VideoTestimonials() {
               </p>
             </div>
 
-            {/* Live badge on first video */}
-            {i === 0 && (
+            {/* Review badge */}
+            <div style={{
+              position: "absolute", top: 16, left: 16, zIndex: 5,
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 12px", borderRadius: 20,
+              background: "rgba(0,0,0,0.6)", backdropFilter: "blur(12px)",
+              border: "1px solid rgba(182,255,0,0.2)",
+            }}>
               <div style={{
-                position: "absolute", top: 16, left: 16, zIndex: 5,
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "6px 12px", borderRadius: 20,
-                background: "rgba(0,0,0,0.6)", backdropFilter: "blur(12px)",
-                border: "1px solid rgba(182,255,0,0.2)",
+                width: 6, height: 6, borderRadius: "50%",
+                background: "#B6FF00",
+                animation: "blink 1.5s infinite",
+              }} />
+              <span style={{
+                fontSize: "0.6rem", fontWeight: 700, color: "#B6FF00",
+                textTransform: "uppercase", letterSpacing: "0.1em",
               }}>
-                <div style={{
-                  width: 6, height: 6, borderRadius: "50%",
-                  background: "#B6FF00",
-                  animation: "blink 1.5s infinite",
-                }} />
-                <span style={{
-                  fontSize: "0.6rem", fontWeight: 700, color: "#B6FF00",
-                  textTransform: "uppercase", letterSpacing: "0.1em",
-                }}>
-                  Community
-                </span>
-              </div>
-            )}
+                Review
+              </span>
+            </div>
           </motion.div>
         ))}
       </div>
