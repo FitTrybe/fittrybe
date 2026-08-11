@@ -1,8 +1,5 @@
 /**
  * /sports — Sport hub index page.
- * Programmatic SEO: provides a clean entry point linking to every per-sport
- * page, internally crosslinks to /events and the download CTA, and exposes
- * a CollectionPage schema so search engines crawl the hub efficiently.
  */
 
 import type { Metadata } from "next";
@@ -91,92 +88,101 @@ export default function SportsHubPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: pageJsonLd }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: collectionJsonLd }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: pageJsonLd }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: collectionJsonLd }} />
 
-      <main className="min-h-screen bg-[#050505] text-white">
-        <nav className="border-b border-white/10 px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
-          <Link
-            href="/"
-            aria-label="Fittrybe — return to homepage"
-            className="inline-flex items-center"
-          >
+      <main style={{ minHeight: "100vh", background: "#050505", color: "#fff" }}>
+        {/* Nav */}
+        <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 1200, margin: "0 auto", padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <Link href="/" aria-label="Fittrybe — return to homepage" style={{ display: "inline-flex", alignItems: "center" }}>
             <Wordmark height={28} />
           </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/events"
-              className="text-sm text-white/60 hover:text-white transition-colors font-[family-name:var(--font-inter-tight)] hidden sm:block"
-            >
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <Link href="/events" className="nav-link hidden sm:block" style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", textDecoration: "none", fontFamily: "var(--font-inter-tight)" }}>
               Sessions
             </Link>
-            <SmartDownloadLink
-              className="text-sm font-medium px-4 py-2 rounded-full bg-[#B6FF00] text-black hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-inter-tight)]"
-            >
+            <SmartDownloadLink style={{ display: "inline-block", fontSize: "0.875rem", fontWeight: 600, padding: "10px 20px", borderRadius: 50, background: "#B6FF00", color: "#000", textDecoration: "none", fontFamily: "var(--font-inter-tight)" }}>
               Get the App
             </SmartDownloadLink>
           </div>
         </nav>
 
-        <header className="max-w-6xl mx-auto px-6 py-16 text-center">
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#B6FF00] mb-4">
-            Sports Hub
-          </span>
-          <h1 className="font-[family-name:var(--font-anton)] text-5xl md:text-7xl font-black uppercase tracking-tight text-white mb-4">
-            Find Your Game.
-            <br />
-            <span className="text-[#B6FF00]">Pick Your Sport.</span>
-          </h1>
-          <p className="text-white/60 text-lg max-w-2xl mx-auto font-[family-name:var(--font-inter-tight)]">
-            From five-a-side football to morning tennis. Every grassroots sport
-            on Fittrybe, with live sessions across the UK.
-          </p>
+        {/* Hero */}
+        <header style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px 64px", textAlign: "center", position: "relative" }}>
+          <div aria-hidden="true" style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 500, height: 350, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(182,255,0,0.06) 0%, transparent 70%)", filter: "blur(80px)", pointerEvents: "none" }} />
+          <div style={{ position: "relative" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#B6FF00", boxShadow: "0 0 12px rgba(182,255,0,0.6)", display: "inline-block" }} />
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em", color: "#B6FF00", fontFamily: "var(--font-inter-tight)" }}>Sports Hub</span>
+            </div>
+            <h1 style={{ fontFamily: "var(--font-anton)", fontSize: "clamp(3rem, 8vw, 6rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 20 }}>
+              <span style={{ display: "block", background: "linear-gradient(to right, #fff 0%, rgba(255,255,255,0.6) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Find Your Game.</span>
+              <span style={{ display: "block", background: "linear-gradient(135deg, #B6FF00 0%, #7CFC00 50%, #B6FF00 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Pick Your Sport.</span>
+            </h1>
+            <p style={{ fontSize: "1.125rem", maxWidth: 640, margin: "0 auto", color: "rgba(255,255,255,0.45)", lineHeight: 1.7, fontFamily: "var(--font-inter-tight)" }}>
+              From five-a-side football to morning tennis. Every grassroots sport on Fittrybe, with live sessions across the UK.
+            </p>
+          </div>
         </header>
 
-        <section
-          aria-label="All sports on Fittrybe"
-          className="max-w-6xl mx-auto px-6 pb-20"
-        >
-          <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {/* Sports grid */}
+        <section aria-label="All sports on Fittrybe" style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px 80px" }}>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4" style={{ gap: 16 }}>
             {SPORTS.map((sport) => (
-              <li key={sport.slug}>
-                <Link
-                  href={`/sports/${sport.slug}`}
-                  className="group block bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#B6FF00]/40 rounded-2xl p-6 transition-all"
-                  aria-label={`${sport.name} sessions on Fittrybe`}
-                >
-                  <div className="text-4xl mb-3" aria-hidden="true">
-                    {sport.emoji}
-                  </div>
-                  <h2 className="font-[family-name:var(--font-anton)] text-xl font-bold uppercase tracking-tight text-white mb-1 group-hover:text-[#B6FF00] transition-colors">
-                    {sport.name}
-                  </h2>
-                  <p className="text-xs text-white/50 font-[family-name:var(--font-inter-tight)] line-clamp-2">
-                    {sport.tagline}
-                  </p>
-                </Link>
-              </li>
+              <Link
+                key={sport.slug}
+                href={`/sports/${sport.slug}`}
+                className="sport-card"
+                aria-label={`${sport.name} sessions on Fittrybe`}
+                style={{
+                  display: "block",
+                  background: "#111",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: 16,
+                  padding: 24,
+                  textDecoration: "none",
+                  transition: "transform 0.4s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s ease, box-shadow 0.4s ease",
+                }}
+              >
+                <div style={{ fontSize: "2.8rem", marginBottom: 12 }} aria-hidden="true">
+                  {sport.emoji}
+                </div>
+                <h2 style={{ fontFamily: "var(--font-anton)", fontSize: "1.2rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "-0.01em", color: "#fff", marginBottom: 6 }}>
+                  {sport.name}
+                </h2>
+                <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-inter-tight)", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                  {sport.tagline}
+                </p>
+              </Link>
             ))}
-          </ul>
+          </div>
         </section>
 
-        <section className="border-t border-white/10 py-16 text-center px-6">
-          <p className="text-white/60 mb-4 font-[family-name:var(--font-inter-tight)]">
-            Don&apos;t see your sport? More are added every month.
-          </p>
-          <SmartDownloadLink
-            className="inline-block px-8 py-4 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
-          >
-            Get the App — Request a Sport
-          </SmartDownloadLink>
+        {/* CTA */}
+        <section style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "80px 24px", textAlign: "center", position: "relative" }}>
+          <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse at center bottom, rgba(182,255,0,0.04) 0%, transparent 60%)" }} />
+          <div style={{ position: "relative" }}>
+            <p style={{ color: "rgba(255,255,255,0.4)", marginBottom: 8, fontFamily: "var(--font-inter-tight)", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.15em" }}>
+              Don&apos;t see your sport?
+            </p>
+            <h2 style={{ fontFamily: "var(--font-anton)", fontSize: "clamp(1.75rem, 4vw, 2.25rem)", fontWeight: 700, textTransform: "uppercase", color: "#fff", marginBottom: 24 }}>
+              More Added Every Month
+            </h2>
+            <SmartDownloadLink className="btn-primary" style={{ fontSize: "1.125rem", padding: "16px 40px", boxShadow: "0 0 30px rgba(182,255,0,0.2)" }}>
+              Get the App — Request a Sport
+            </SmartDownloadLink>
+          </div>
         </section>
       </main>
+
+      <style>{`
+        .sport-card:hover {
+          transform: translateY(-8px) !important;
+          border-color: rgba(182,255,0,0.25) !important;
+          box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(182,255,0,0.1) !important;
+        }
+        .sport-card:hover h2 { color: #B6FF00 !important; }
+      `}</style>
     </>
   );
 }

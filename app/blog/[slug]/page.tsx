@@ -1,15 +1,5 @@
 /**
- * ─── Fittrybe — Blog Post Page ────────────────────────────────────────────────
- * Wired to Supabase via lib/posts.ts.
- * generateStaticParams pre-renders all published posts at build time.
- *
- * SEO FIXES:
- *  1. OG image is always an ABSOLUTE URL (WhatsApp / crawlers require this)
- *  2. Fallback OG image uses the dynamic /api/og route with absolute base
- *  3. twitter:image also always absolute
- *  4. Added og:image:secure_url for WhatsApp compatibility
- *  5. readingTime added to structured data
- *  6. article:author and article:section added as extra OG tags
+ * Blog post detail page — keeps all SEO/metadata logic, premium design.
  */
 
 import type { Metadata } from "next";
@@ -33,20 +23,9 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ slug }));
 }
 
-/** Always returns an absolute HTTPS URL for the OG image. */
-function resolveOGImage(post: {
-  coverImage?: string;
-  title: string;
-  description: string;
-}): string {
-  if (post.coverImage && post.coverImage.startsWith("http")) {
-    return post.coverImage;
-  }
-  // Fall back to the dynamic branded card — must be absolute for crawlers
-  const params = new URLSearchParams({
-    title: post.title,
-    description: post.description,
-  });
+function resolveOGImage(post: { coverImage?: string; title: string; description: string }): string {
+  if (post.coverImage && post.coverImage.startsWith("http")) return post.coverImage;
+  const params = new URLSearchParams({ title: post.title, description: post.description });
   return `${seoConfig.siteUrl}/api/og?${params.toString()}`;
 }
 
@@ -68,7 +47,6 @@ export async function generateMetadata({
     keywords: [...seoConfig.keywords.slice(0, 5), ...(post.tags ?? [])],
     authors: [{ name: post.author?.name ?? seoConfig.author.name }],
     alternates: { canonical: canonicalUrl },
-
     openGraph: {
       type: "article",
       url: canonicalUrl,
@@ -80,31 +58,19 @@ export async function generateMetadata({
       modifiedTime: post.updatedAt ?? post.publishedAt,
       authors: [post.author?.name ?? seoConfig.author.name],
       tags: post.tags,
-      // Single image object — absolute URL, correct dimensions
-      images: [
-        {
-          url: ogImage,
-          secureUrl: ogImage,          // ← WhatsApp prefers this
-          width: 1200,
-          height: 630,
-          alt: post.title,
-          type: post.coverImage?.startsWith("http") ? "image/jpeg" : "image/png",
-        },
-      ],
+      images: [{ url: ogImage, secureUrl: ogImage, width: 1200, height: 630, alt: post.title, type: post.coverImage?.startsWith("http") ? "image/jpeg" : "image/png" }],
     },
-
     twitter: {
       card: "summary_large_image",
       site: seoConfig.twitterHandle,
       creator: seoConfig.twitterHandle,
       title: post.title,
       description: post.description,
-      images: [ogImage],              // ← must be absolute
+      images: [ogImage],
     },
   };
 }
 
-/** Rough reading time estimate (200 wpm average). */
 function estimateReadingTime(html: string): number {
   const words = html.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
@@ -117,7 +83,6 @@ export default async function BlogPostPage({
 }) {
   const { slug } = await params;
   const post = await getBlogPost(slug);
-
   if (!post) notFound();
 
   const canonicalUrl = buildCanonicalUrl(`/blog/${slug}`);
@@ -134,25 +99,14 @@ export default async function BlogPostPage({
       url: canonicalUrl,
       datePublished: post.publishedAt,
       dateModified: post.updatedAt ?? post.publishedAt,
-      author: {
-        "@type": "Person",
-        name: post.author?.name ?? seoConfig.author.name,
-      },
+      author: { "@type": "Person", name: post.author?.name ?? seoConfig.author.name },
       publisher: { "@id": `${seoConfig.siteUrl}/#organization` },
-      image: {
-        "@type": "ImageObject",
-        url: ogImage,
-        width: 1200,
-        height: 630,
-      },
+      image: { "@type": "ImageObject", url: ogImage, width: 1200, height: 630 },
       isPartOf: { "@id": `${seoConfig.siteUrl}/#website` },
       keywords: post.tags?.join(", "),
       timeRequired: `PT${readingTime}M`,
       inLanguage: seoConfig.siteLanguage,
-      mainEntityOfPage: {
-        "@type": "WebPage",
-        "@id": canonicalUrl,
-      },
+      mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
     },
     buildWebPageSchema({
       url: canonicalUrl,
@@ -174,103 +128,107 @@ export default async function BlogPostPage({
   ]);
 
   const publishDate = new Date(post.publishedAt).toLocaleDateString("en-GB", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+    year: "numeric", month: "long", day: "numeric",
   });
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: pageJsonLd }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: pageJsonLd }} />
 
-      <main className="min-h-screen bg-[#050505] text-white">
-        <nav className="border-b border-white/10 px-6 py-4 flex items-center justify-between max-w-4xl mx-auto">
-          <Link
-            href="/"
-            aria-label="Fittrybe — return to homepage"
-            className="inline-flex items-center"
-          >
+      <main style={{ minHeight: "100vh", background: "#050505", color: "#fff" }}>
+        {/* Nav */}
+        <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 800, margin: "0 auto", padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <Link href="/" aria-label="Fittrybe — return to homepage" style={{ display: "inline-flex", alignItems: "center" }}>
             <Wordmark height={28} />
           </Link>
-          <Link
-            href="/blog"
-            className="text-sm text-white/60 hover:text-white transition-colors font-[family-name:var(--font-inter-tight)]"
-          >
-            ← All articles
+          <Link href="/blog" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", textDecoration: "none", fontFamily: "var(--font-inter-tight)" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            All articles
           </Link>
         </nav>
 
-        <article
-          className="max-w-4xl mx-auto px-6 py-12"
-          itemScope
-          itemType="https://schema.org/Article"
-        >
+        <article itemScope itemType="https://schema.org/Article" style={{ maxWidth: 800, margin: "0 auto", padding: "48px 24px 80px" }}>
+          {/* Tags */}
           {post.tags && post.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-6">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
               {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-[#B6FF00]/10 text-[#B6FF00]"
-                >
+                <span key={tag} style={{
+                  fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase",
+                  letterSpacing: "0.08em", padding: "4px 12px", borderRadius: 50,
+                  background: "rgba(182,255,0,0.1)", color: "#B6FF00",
+                  border: "1px solid rgba(182,255,0,0.2)",
+                }}>
                   {tag}
                 </span>
               ))}
             </div>
           )}
 
-          <header className="mb-10">
-            <h1
-              itemProp="headline"
-              className="font-[family-name:var(--font-anton)] text-4xl md:text-6xl font-black uppercase tracking-tight text-white mb-4"
-            >
+          {/* Header */}
+          <header style={{ marginBottom: 40 }}>
+            <h1 itemProp="headline" style={{
+              fontFamily: "var(--font-anton)", fontSize: "clamp(2rem, 6vw, 3.5rem)",
+              fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em",
+              lineHeight: 1.1, color: "#fff", marginBottom: 16,
+            }}>
               {post.title}
             </h1>
-            <p
-              itemProp="description"
-              className="text-xl text-white/60 mb-6 font-[family-name:var(--font-inter-tight)]"
-            >
+            <p itemProp="description" style={{
+              fontSize: "1.15rem", color: "rgba(255,255,255,0.5)", marginBottom: 24,
+              fontFamily: "var(--font-inter-tight)", lineHeight: 1.6,
+            }}>
               {post.description}
             </p>
-            <div className="flex items-center gap-4 text-sm text-white/40 font-[family-name:var(--font-inter-tight)]">
-              <span itemProp="author">{post.author?.name ?? "Fittrybe"}</span>
-              <span>·</span>
-              <time itemProp="datePublished" dateTime={post.publishedAt}>
-                {publishDate}
-              </time>
-              <span>·</span>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 12,
+              fontSize: "0.82rem", color: "rgba(255,255,255,0.35)",
+              fontFamily: "var(--font-inter-tight)",
+              padding: "16px 0", borderTop: "1px solid rgba(255,255,255,0.06)",
+              borderBottom: "1px solid rgba(255,255,255,0.06)",
+            }}>
+              <span itemProp="author" style={{ fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>
+                {post.author?.name ?? "Fittrybe"}
+              </span>
+              <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
+              <time itemProp="datePublished" dateTime={post.publishedAt}>{publishDate}</time>
+              <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
               <span>{readingTime} min read</span>
             </div>
           </header>
 
+          {/* Cover image */}
           {post.coverImage && (
-            <div className="mb-10 rounded-2xl overflow-hidden aspect-[16/9]">
+            <div style={{ marginBottom: 40, borderRadius: 16, overflow: "hidden", aspectRatio: "16/9" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={post.coverImage}
                 alt={post.title}
-                className="w-full h-full object-cover"
                 itemProp="image"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             </div>
           )}
 
+          {/* Article body */}
           <div itemProp="articleBody">
             <BlogPostContent html={post.content} />
           </div>
 
-          <footer className="mt-16 p-8 bg-white/5 border border-white/10 rounded-2xl text-center">
-            <p className="text-white/60 mb-4 font-[family-name:var(--font-inter-tight)]">
+          {/* CTA footer */}
+          <div style={{
+            marginTop: 64, padding: 32, borderRadius: 16,
+            background: "#111", border: "1px solid rgba(255,255,255,0.06)",
+            textAlign: "center",
+          }}>
+            <p style={{ color: "rgba(255,255,255,0.5)", marginBottom: 16, fontFamily: "var(--font-inter-tight)", fontSize: "0.95rem" }}>
               Ready to find local sports sessions near you?
             </p>
-            <SmartDownloadLink
-              className="inline-block px-8 py-3 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
-            >
+            <SmartDownloadLink className="btn-primary">
               Get the App — Find Your Game
             </SmartDownloadLink>
-          </footer>
+          </div>
         </article>
       </main>
     </>

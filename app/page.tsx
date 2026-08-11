@@ -23,6 +23,7 @@ import {
   buildGraphSchema,
   LANDING_FAQS,
 } from "@/lib/structured-data";
+import { getServerReadClient } from "@/lib/supabase-server-read";
 import dynamic from "next/dynamic";
 const LandingPageClient = dynamic(() => import("@/components/LandingPageClient"), { ssr: true });
 
@@ -66,8 +67,17 @@ const pageJsonLd = buildGraphSchema([
   buildFAQSchema(LANDING_FAQS),
 ]);
 
+export const revalidate = 60;
+
 // ─── Page (Server Component) ──────────────────────────────────────────────────
-export default function LandingPage() {
+export default async function LandingPage() {
+  // Fetch real user count from profiles table server-side (visible to crawlers)
+  const supabase = getServerReadClient();
+  const { count } = await supabase
+    .from("profiles")
+    .select("*", { count: "exact", head: true });
+  const playerCount = (count ?? 0) + 50;
+
   return (
     <>
       {/* Page-specific JSON-LD */}
@@ -76,7 +86,7 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: pageJsonLd }}
       />
       {/* Client component contains all the interactive/animated UI */}
-      <LandingPageClient faqs={LANDING_FAQS} />
+      <LandingPageClient faqs={LANDING_FAQS} playerCount={playerCount} />
     </>
   );
 }

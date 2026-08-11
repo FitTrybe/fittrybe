@@ -284,6 +284,19 @@ export async function getUpcomingEvents(): Promise<FittrybeEvent[]> {
   return data.map(rowToEvent);
 }
 
+/** Event with host profile data for premium card rendering. */
+export interface EventWithHost extends FittrybeEvent {
+  hostName: string | null;
+  hostAvatar: string | null;
+  hostVerified: boolean;
+}
+
+/** Fetch upcoming events with host profile data (separate queries — no FK needed). */
+export async function getUpcomingEventsWithHosts(): Promise<EventWithHost[]> {
+  const events = await getUpcomingEvents();
+  return enrichWithHosts(events);
+}
+
 /** Fetch a single event by ID. Returns null if not found or cancelled. */
 export async function getEventById(id: string): Promise<FittrybeEvent | null> {
   const { data, error } = await supabase
@@ -490,7 +503,7 @@ export async function getEventWithExtras(
 export async function getRelatedEvents(
   event: FittrybeEvent,
   limit = 3
-): Promise<FittrybeEvent[]> {
+): Promise<EventWithHost[]> {
   const nowIso = new Date().toISOString();
 
   // 1. Same sport, same area
@@ -545,7 +558,42 @@ export async function getRelatedEvents(
     collected = [...collected, ...extra];
   }
 
-  return collected;
+  return enrichWithHosts(collected);
+}
+
+/** Batch-fetch host profiles and attach to events. */
+async function enrichWithHosts(events: FittrybeEvent[]): Promise<EventWithHost[]> {
+  if (events.length === 0) return [];
+
+  const hostIds = [...new Set(events.map((e) => e.hostId).filter(Boolean))];
+  const hostMap = new Map<string, { name: string | null; avatar: string | null; verified: boolean }>();
+
+  if (hostIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, display_name, avatar_url, is_verified")
+      .in("id", hostIds);
+
+    if (profiles) {
+      for (const p of profiles) {
+        hostMap.set(p.id, {
+          name: p.display_name || p.full_name || null,
+          avatar: p.avatar_url || null,
+          verified: p.is_verified ?? false,
+        });
+      }
+    }
+  }
+
+  return events.map((e) => {
+    const host = hostMap.get(e.hostId);
+    return {
+      ...e,
+      hostName: host?.name ?? null,
+      hostAvatar: host?.avatar ?? null,
+      hostVerified: host?.verified ?? false,
+    };
+  });
 }
 
 /**

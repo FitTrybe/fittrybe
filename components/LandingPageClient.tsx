@@ -1665,27 +1665,7 @@ function CommunitySection() {
 }
 
 
-function BentoGrid() {
-  const [playerCount, setPlayerCount] = useState(0);
-  useEffect(() => {
-    const fetchCount = async () => {
-      try {
-        // Combine app users with historical waitlist signups for a single
-        // "players on Fittrybe" number. Either table being unavailable just
-        // falls through to 0 and the +100 floor still gives a friendly value.
-        const [usersRes, waitlistRes] = await Promise.allSettled([
-          supabase.from("profiles").select("*", { count: "exact", head: true }),
-          supabase.from("waitlist").select("*", { count: "exact", head: true }),
-        ]);
-        const users = usersRes.status === "fulfilled" ? usersRes.value.count ?? 0 : 0;
-        const waitlist = waitlistRes.status === "fulfilled" ? waitlistRes.value.count ?? 0 : 0;
-        setPlayerCount(users + waitlist);
-      } catch (error) {
-        console.error("Error fetching player count:", error);
-      }
-    };
-    fetchCount();
-  }, []);
+function BentoGrid({ playerCount }: { playerCount: number }) {
 
   return (
     <section aria-label="Fittrybe features and stats" style={{ padding: "100px 5vw", background: "#050505" }}>
@@ -1714,7 +1694,7 @@ function BentoGrid() {
           <div>
             <p style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#B6FF00", marginBottom: "1rem" }}>● LIVE COUNT</p>
             <p style={{ fontFamily: "var(--font-anton, 'Anton', sans-serif)", fontSize: "clamp(3.5rem, 6vw, 5.5rem)", fontWeight: 900, lineHeight: 1, color: "#fff" }}>
-              <AnimatedCount target={playerCount + 100 || 240} suffix="+" />
+              <AnimatedCount target={playerCount} suffix="+" />
             </p>
             <p style={{ fontSize: "0.85rem", color: "#4B5563", fontWeight: 500, marginTop: "0.5rem" }}>Players already on Fittrybe</p>
           </div>
@@ -2163,10 +2143,10 @@ function Footer() {
         </div>
       </div>
 
-      <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(255,255,255,0.04)", textAlign: "center", fontSize: "0.72rem", color: "#2a2a2a", fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+      <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(255,255,255,0.1)", textAlign: "center", fontSize: "0.72rem", color: "#ffffff", fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" }}>
         © {currentYear} Fittrybe Ltd. All rights reserved. · London, United Kingdom
       </div>
-      <div style={{ marginTop: "0.75rem", textAlign: "center", fontSize: "0.65rem", color: "#1f1f1f", fontWeight: 500, letterSpacing: "0.06em" }}>
+      <div style={{ marginTop: "0.75rem", textAlign: "center", fontSize: "0.65rem", color: "#cccccc", fontWeight: 500, letterSpacing: "0.06em" }}>
         ICO Registration: ZC210931
       </div>
     </footer>
@@ -2176,8 +2156,10 @@ function Footer() {
 // ─── Root Client Component ────────────────────────────────────────────────────
 export default function LandingPageClient({
   faqs,
+  playerCount: serverPlayerCount,
 }: {
   faqs: Array<{ question: string; answer: string }>;
+  playerCount: number;
 }) {
   return (
     <>
@@ -2187,7 +2169,7 @@ export default function LandingPageClient({
         <HeroSection />
         <SessionsNearYou />
         <CommunitySection />
-        <BentoGrid />
+        <BentoGrid playerCount={serverPlayerCount} />
         <BlogPreviewSection />
         <FAQSection faqs={faqs} />
       </main>

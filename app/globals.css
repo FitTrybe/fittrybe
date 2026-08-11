@@ -410,6 +410,107 @@ html { scroll-behavior: smooth; }
   .bento-grid { gap: 10px !important; }
 }
 
+/* ─── Event card (used across server components) ─────────────────────────── */
+.event-card {
+  background: #111;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s ease, box-shadow 0.4s ease;
+}
+.event-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(182,255,0,0.25);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(182,255,0,0.1);
+}
+.event-card-img {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.event-card:hover .event-card-img {
+  transform: scale(1.08);
+}
+
+/* ─── Blog card hover ────────────────────────────────────────────────────── */
+.blog-card > div {
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s ease, box-shadow 0.4s ease;
+}
+.blog-card:hover > div {
+  transform: translateY(-8px);
+  border-color: rgba(182,255,0,0.25);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(182,255,0,0.1);
+}
+.blog-card:hover .blog-card-img {
+  transform: scale(1.08);
+}
+
+/* ─── City link hover ────────────────────────────────────────────────────── */
+.city-link:hover {
+  border-color: rgba(182,255,0,0.3) !important;
+  background: rgba(255,255,255,0.06) !important;
+  color: #fff !important;
+}
+
+/* ─── Events page animations ─────────────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Event detail page hover effects ────────────────────────────────────── */
+.event-host-link:hover { color: #B6FF00 !important; }
+.event-maps-btn:hover { border-color: rgba(255,255,255,0.2) !important; color: #fff !important; }
+.event-venue-link:hover { background: rgba(182,255,0,0.05) !important; }
+.event-host-more:hover { border-color: rgba(182,255,0,0.25) !important; background: rgba(255,255,255,0.03) !important; }
+
+/* ─── CTA button animations ──────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-block;
+  padding: 14px 32px;
+  background: #B6FF00;
+  color: #0D0D0D;
+  font-family: var(--font-anton, 'Anton', sans-serif);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(182,255,0,0.3), 0 0 0 1px rgba(182,255,0,0.2);
+}
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+.btn-secondary {
+  display: inline-block;
+  padding: 14px 32px;
+  background: transparent;
+  color: #fff;
+  font-family: var(--font-anton, 'Anton', sans-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s ease, background 0.3s ease;
+}
+.btn-secondary:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.05);
+}
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
 /* ─── Reduced-motion: disable infinite & decorative animations ────────────── */
 @media (prefers-reduced-motion: reduce) {
   .flip-word-enter,

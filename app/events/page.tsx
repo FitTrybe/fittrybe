@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import {
   getUpcomingEventCities,
-  getUpcomingEvents,
+  getUpcomingEventsWithHosts,
 } from "@/lib/events";
 import { buildCanonicalUrl, seoConfig } from "@/lib/seo-config";
 import {
@@ -22,35 +22,35 @@ export const revalidate = 60;
 
 const SPORT_FILTERS = [
   { id: "all", label: "All Sports", emoji: "" },
-  { id: "football", label: "Football", emoji: "⚽" },
-  { id: "basketball", label: "Basketball", emoji: "🏀" },
-  { id: "cycling", label: "Cycling", emoji: "🚴" },
-  { id: "running", label: "Running", emoji: "🏃" },
-  { id: "badminton", label: "Badminton", emoji: "🏸" },
-  { id: "tennis", label: "Tennis", emoji: "🎾" },
-  { id: "gym", label: "Gym", emoji: "🏋️" },
+  { id: "football", label: "Football", emoji: "\u26BD" },
+  { id: "basketball", label: "Basketball", emoji: "\uD83C\uDFC0" },
+  { id: "cycling", label: "Cycling", emoji: "\uD83D\uDEB4" },
+  { id: "running", label: "Running", emoji: "\uD83C\uDFC3" },
+  { id: "badminton", label: "Badminton", emoji: "\uD83C\uDFF8" },
+  { id: "tennis", label: "Tennis", emoji: "\uD83C\uDFBE" },
+  { id: "gym", label: "Gym", emoji: "\uD83C\uDFCB\uFE0F" },
 ];
 
 const EVENTS_FAQS = [
   {
     question: "How do I find a sports session near me?",
     answer:
-      "Browse the live list above or filter by your sport. Every Fittrybe session shows the venue, time, price and remaining spots upfront — tap a session to view full details and reserve.",
+      "Browse the live list above or filter by your sport. Every Fittrybe session shows the venue, time, price and remaining spots upfront \u2014 tap a session to view full details and reserve.",
   },
   {
     question: "Are sessions on Fittrybe free?",
     answer:
-      "Many are free. Paid sessions show the price per player on the card before you join — typically £3–£10 to cover pitch, court or coach costs.",
+      "Many are free. Paid sessions show the price per player on the card before you join \u2014 typically \u00A33\u2013\u00A310 to cover pitch, court or coach costs.",
   },
   {
     question: "Can I join a session as a solo player?",
     answer:
-      "Yes — most Fittrybe sessions are designed for solo joiners. Hosts split arrivals into balanced teams or pair you up on the day.",
+      "Yes \u2014 most Fittrybe sessions are designed for solo joiners. Hosts split arrivals into balanced teams or pair you up on the day.",
   },
   {
     question: "What sports are listed on Fittrybe?",
     answer:
-      "Football (5-a-side and 7-a-side), basketball, tennis, badminton, running groups, cycling, swimming, gym sessions and boxing — all hosted by real people in your area.",
+      "Football (5-a-side and 7-a-side), basketball, tennis, badminton, running groups, cycling, swimming, gym sessions and boxing \u2014 all hosted by real people in your area.",
   },
 ];
 
@@ -74,8 +74,6 @@ export async function generateMetadata({
     ? `Book grassroots ${activeSport} sessions near you on Fittrybe. Find local games, reserve your spot in one tap, and meet players in your area.`
     : "Browse upcoming grassroots sports sessions on Fittrybe. Find football, basketball, cycling, badminton and more near you. Reserve your spot in one tap.";
 
-  // All sport filter URLs canonicalise back to /events to prevent thin
-  // duplicate variants competing with the sport hub at /sports/[sport].
   const canonicalUrl = buildCanonicalUrl("/events");
 
   const eventsOGImage = `${seoConfig.siteUrl}/api/og?title=${encodeURIComponent(
@@ -123,7 +121,7 @@ export default async function EventsIndexPage({
 }) {
   const { sport } = await searchParams;
   const [allEvents, cities] = await Promise.all([
-    getUpcomingEvents(),
+    getUpcomingEventsWithHosts(),
     getUpcomingEventCities(),
   ]);
 
@@ -135,10 +133,8 @@ export default async function EventsIndexPage({
   const isEmpty = filteredEvents.length === 0;
   const canonicalUrl = buildCanonicalUrl("/events");
 
-  // Map FittrybeEvent → minimal ItemListEvent shape (lib/events doesn't
-  // know about structured-data, so this conversion lives at the page boundary)
   const itemListEvents: ItemListEvent[] = filteredEvents
-    .slice(0, 30) // cap so the JSON-LD doesn't bloat the document
+    .slice(0, 30)
     .map((e) => ({
       id: e.id,
       title: e.title,
@@ -159,8 +155,8 @@ export default async function EventsIndexPage({
     : "Upcoming Sports Sessions on Fittrybe";
 
   const collectionDescription = activeSport
-    ? `Live ${activeSport} sessions across the UK — book your spot, meet your tribe.`
-    : "Live sports sessions across the UK — football, basketball, tennis, badminton and more. Book your spot, meet your tribe.";
+    ? `Live ${activeSport} sessions across the UK \u2014 book your spot, meet your tribe.`
+    : "Live sports sessions across the UK \u2014 football, basketball, tennis, badminton and more. Book your spot, meet your tribe.";
 
   const pageJsonLd = buildGraphSchema(
     [
@@ -192,7 +188,6 @@ export default async function EventsIndexPage({
 
   return (
     <>
-      {/* Noindex empty filter result pages — they're dead-end thin content */}
       {isEmpty && activeSport && (
         <meta name="robots" content="noindex, follow" />
       )}
@@ -202,60 +197,206 @@ export default async function EventsIndexPage({
         dangerouslySetInnerHTML={{ __html: pageJsonLd }}
       />
 
-      <main className="min-h-screen bg-[#050505] text-white">
-        {/* Nav */}
-        <nav className="border-b border-white/10 px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
+      <main
+        style={{
+          minHeight: "100vh",
+          background: "#050505",
+          color: "#ffffff",
+          overflow: "hidden",
+        }}
+      >
+        {/* ── Nav ── */}
+        <nav
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            maxWidth: 1200,
+            margin: "0 auto",
+            padding: "16px 24px",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            background: "transparent",
+          }}
+        >
           <Link
             href="/"
-            aria-label="Fittrybe — return to homepage"
-            className="inline-flex items-center"
+            aria-label="Fittrybe \u2014 return to homepage"
+            style={{ display: "inline-flex", alignItems: "center" }}
           >
             <Wordmark height={28} />
           </Link>
-          <div className="flex items-center gap-4">
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <Link
               href="/sports"
-              className="text-sm text-white/60 hover:text-white transition-colors font-[family-name:var(--font-inter-tight)] hidden sm:block"
+              style={{
+                fontSize: "0.875rem",
+                color: "rgba(255,255,255,0.5)",
+                textDecoration: "none",
+                fontFamily: "var(--font-inter-tight)",
+              }}
+              className="hidden sm:block nav-link"
             >
               Sports
             </Link>
             <Link
               href="/blog"
-              className="text-sm text-white/60 hover:text-white transition-colors font-[family-name:var(--font-inter-tight)] hidden sm:block"
+              style={{
+                fontSize: "0.875rem",
+                color: "rgba(255,255,255,0.5)",
+                textDecoration: "none",
+                fontFamily: "var(--font-inter-tight)",
+              }}
+              className="hidden sm:block nav-link"
             >
               Blog
             </Link>
             <SmartDownloadLink
-              className="text-sm font-medium px-4 py-2 rounded-full bg-[#B6FF00] text-black hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-inter-tight)]"
+              style={{
+                display: "inline-block",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                padding: "10px 20px",
+                borderRadius: 50,
+                background: "#B6FF00",
+                color: "#000000",
+                textDecoration: "none",
+                fontFamily: "var(--font-inter-tight)",
+              }}
             >
               Get the App
             </SmartDownloadLink>
           </div>
         </nav>
 
-        {/* Hero */}
-        <section className="max-w-6xl mx-auto px-6 py-16 text-center">
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#B6FF00] mb-4">
-            Live Sessions
-          </span>
-          <h1 className="font-[family-name:var(--font-anton)] text-5xl md:text-7xl font-black uppercase tracking-tight text-white mb-4">
-            Find Your Game.
-            <br />
-            <span className="text-[#B6FF00]">Show Up and Play.</span>
-          </h1>
-          {/* Location signal — geographic anchor text for local SEO */}
-          <p className="text-white/60 text-lg max-w-xl mx-auto font-[family-name:var(--font-inter-tight)]">
-            {activeSport
-              ? `Grassroots ${activeSport} sessions in Redhill, Surrey and across the UK. Reserve your spot and meet your tribe.`
-              : "Grassroots sports sessions in Redhill, Surrey and across the UK. Football, basketball, cycling and more — reserve your spot in one tap."}
-          </p>
+        {/* ── Hero ── */}
+        <section
+          style={{
+            position: "relative",
+            maxWidth: 1200,
+            margin: "0 auto",
+            padding: "80px 24px 64px",
+            textAlign: "center",
+          }}
+        >
+          {/* Glow orb */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 600,
+              height: 400,
+              borderRadius: "50%",
+              background:
+                "radial-gradient(ellipse, rgba(182,255,0,0.06) 0%, transparent 70%)",
+              filter: "blur(80px)",
+              pointerEvents: "none",
+            }}
+          />
+
+          <div style={{ position: "relative" }}>
+            {/* Badge */}
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 24,
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "#B6FF00",
+                  boxShadow: "0 0 12px rgba(182,255,0,0.6)",
+                  display: "inline-block",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.2em",
+                  color: "#B6FF00",
+                  fontFamily: "var(--font-inter-tight)",
+                }}
+              >
+                Live Sessions
+              </span>
+            </div>
+
+            <h1
+              style={{
+                fontFamily: "var(--font-anton)",
+                fontSize: "clamp(3rem, 8vw, 6rem)",
+                fontWeight: 900,
+                textTransform: "uppercase",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.05,
+                marginBottom: 24,
+              }}
+            >
+              <span
+                style={{
+                  display: "block",
+                  background:
+                    "linear-gradient(to right, #ffffff 0%, rgba(255,255,255,0.6) 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                Find Your Game.
+              </span>
+              <span
+                style={{
+                  display: "block",
+                  background:
+                    "linear-gradient(135deg, #B6FF00 0%, #7CFC00 50%, #B6FF00 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                Show Up and Play.
+              </span>
+            </h1>
+
+            <p
+              style={{
+                fontSize: "1.125rem",
+                maxWidth: 640,
+                margin: "0 auto",
+                color: "rgba(255,255,255,0.45)",
+                lineHeight: 1.7,
+                fontFamily: "var(--font-inter-tight)",
+              }}
+            >
+              {activeSport
+                ? `Grassroots ${activeSport} sessions in Redhill, Surrey and across the UK. Reserve your spot and meet your tribe.`
+                : "Grassroots sports sessions in Redhill, Surrey and across the UK. Football, basketball, cycling and more \u2014 reserve your spot in one tap."}
+            </p>
+          </div>
         </section>
 
-        {/* Sport filters — link to the per-sport session page (/session/<sport>)
-            so crawlers traverse to an indexable URL with its own canonical
-            instead of a thin filter variant. Active "All" stays on /events. */}
-        <section className="max-w-6xl mx-auto px-6 mb-10" aria-label="Filter by sport">
-          <div className="flex flex-wrap gap-2 justify-center">
+        {/* ── Sport filter pills ── */}
+        <section
+          aria-label="Filter by sport"
+          style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px 48px" }}
+        >
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
             {SPORT_FILTERS.map((filter) => {
               const isActive =
                 (!activeSport && filter.id === "all") ||
@@ -266,14 +407,34 @@ export default async function EventsIndexPage({
                 <Link
                   key={filter.id}
                   href={href}
-                  className={`text-sm font-medium px-4 py-2 rounded-full transition-all font-[family-name:var(--font-inter-tight)] ${
-                    isActive
-                      ? "bg-[#B6FF00] text-black"
-                      : "bg-white/5 text-white/60 hover:text-white border border-white/10 hover:border-white/30"
-                  }`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "10px 20px",
+                    borderRadius: 50,
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    fontFamily: "var(--font-inter-tight)",
+                    transition: "all 0.3s ease",
+                    ...(isActive
+                      ? {
+                          background: "#B6FF00",
+                          color: "#0D0D0D",
+                          boxShadow: "0 0 20px rgba(182,255,0,0.25)",
+                        }
+                      : {
+                          background: "#161616",
+                          color: "rgba(255,255,255,0.55)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                        }),
+                  }}
                   aria-current={isActive ? "page" : undefined}
                 >
-                  {filter.emoji && <span aria-hidden="true">{filter.emoji} </span>}
+                  {filter.emoji && (
+                    <span aria-hidden="true">{filter.emoji}</span>
+                  )}
                   {filter.label}
                 </Link>
               );
@@ -281,84 +442,245 @@ export default async function EventsIndexPage({
           </div>
         </section>
 
-        {/* Events grid */}
+        {/* ── Events grid ── */}
         <section
-          className="max-w-6xl mx-auto px-6 pb-20"
           aria-label="Upcoming sessions"
+          style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px 96px" }}
         >
           {isEmpty ? (
-            <div className="text-center py-20">
-              <p className="text-white/40 text-lg font-[family-name:var(--font-inter-tight)] mb-6">
+            <div style={{ textAlign: "center", padding: "96px 0" }}>
+              <div
+                style={{
+                  fontSize: "4.5rem",
+                  marginBottom: 24,
+                  display: "inline-block",
+                  filter: "drop-shadow(0 0 20px rgba(182,255,0,0.3))",
+                }}
+              >
                 {activeSport
-                  ? `No upcoming ${activeSport} sessions right now. Check back soon!`
-                  : "No upcoming sessions right now. Check back soon!"}
+                  ? SPORT_FILTERS.find((f) => f.id === activeSport)?.emoji ||
+                    "\uD83C\uDFC3"
+                  : "\uD83C\uDFDF"}
+              </div>
+              <p
+                style={{
+                  fontSize: "1.125rem",
+                  fontFamily: "var(--font-inter-tight)",
+                  color: "rgba(255,255,255,0.5)",
+                  marginBottom: 8,
+                }}
+              >
+                {activeSport
+                  ? `No upcoming ${activeSport} sessions right now.`
+                  : "No upcoming sessions right now."}
+              </p>
+              <p
+                style={{
+                  fontSize: "0.875rem",
+                  fontFamily: "var(--font-inter-tight)",
+                  color: "rgba(255,255,255,0.3)",
+                  marginBottom: 32,
+                }}
+              >
+                New sessions are added daily \u2014 check back soon or get the app.
               </p>
               <SmartDownloadLink
-                className="inline-block px-6 py-3 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] uppercase tracking-wide"
+                style={{
+                  display: "inline-block",
+                  padding: "14px 32px",
+                  background: "#B6FF00",
+                  color: "#000000",
+                  fontWeight: 700,
+                  borderRadius: 50,
+                  textDecoration: "none",
+                  fontFamily: "var(--font-anton)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  fontSize: "0.95rem",
+                }}
               >
                 Get the App
               </SmartDownloadLink>
             </div>
           ) : (
             <>
-              <p className="text-white/40 text-sm font-[family-name:var(--font-inter-tight)] mb-6">
-                {filteredEvents.length} session
-                {filteredEvents.length !== 1 ? "s" : ""} available
-              </p>
+              {/* Session count pill */}
+              <div style={{ marginBottom: 32 }}>
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "6px 16px",
+                    borderRadius: 50,
+                    background: "#161616",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    fontSize: "0.82rem",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.5)",
+                    fontFamily: "var(--font-inter-tight)",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "#B6FF00",
+                      display: "inline-block",
+                    }}
+                  />
+                  {filteredEvents.length} session
+                  {filteredEvents.length !== 1 ? "s" : ""} live
+                </div>
+              </div>
+
+              {/* Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
+                {filteredEvents.map((event, i) => (
+                  <div
+                    key={event.id}
+                    style={{
+                      animation: `fadeSlideUp 0.5s ease-out ${i * 0.06}s both`,
+                    }}
+                  >
+                    <EventCard event={event} />
+                  </div>
                 ))}
               </div>
             </>
           )}
         </section>
 
-        {/* Browse by city — internal-link block routes crawlers into the
-            programmatic /events/in/[city] pages and signals geographic
-            coverage to search engines. */}
+        {/* ── Browse by City ── */}
         {cities.length > 0 && (
           <section
             aria-label="Browse sessions by city"
-            className="max-w-6xl mx-auto px-6 py-12 border-t border-white/10"
+            style={{
+              maxWidth: 1200,
+              margin: "0 auto",
+              padding: "64px 24px",
+              borderTop: "1px solid rgba(255,255,255,0.06)",
+            }}
           >
-            <h2 className="font-[family-name:var(--font-anton)] text-2xl md:text-3xl font-bold uppercase tracking-tight text-white mb-6 text-center">
-              Browse by city
+            <h2
+              style={{
+                fontFamily: "var(--font-anton)",
+                fontSize: "clamp(1.75rem, 4vw, 2.25rem)",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "-0.02em",
+                color: "#ffffff",
+                marginBottom: 40,
+                textAlign: "center",
+              }}
+            >
+              Browse by City
             </h2>
-            <ul className="flex flex-wrap justify-center gap-3">
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: 12,
+              }}
+            >
               {cities.slice(0, 24).map((city) => (
-                <li key={city.slug}>
-                  <Link
-                    href={`/events/in/${city.slug}`}
-                    className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#B6FF00]/40 text-white/70 hover:text-white transition-all font-[family-name:var(--font-inter-tight)]"
+                <Link
+                  key={city.slug}
+                  href={`/events/in/${city.slug}`}
+                  className="city-link"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "12px 20px",
+                    borderRadius: 14,
+                    background: "#111",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    color: "rgba(255,255,255,0.7)",
+                    fontSize: "0.85rem",
+                    fontWeight: 500,
+                    textDecoration: "none",
+                    fontFamily: "var(--font-inter-tight)",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  {city.name}
+                  <span
+                    style={{
+                      padding: "2px 8px",
+                      borderRadius: 8,
+                      background: "rgba(182,255,0,0.1)",
+                      color: "#B6FF00",
+                      fontSize: "0.7rem",
+                      fontWeight: 700,
+                    }}
                   >
-                    {city.name}
-                    <span className="text-xs text-white/40">{city.count}</span>
-                  </Link>
-                </li>
+                    {city.count}
+                  </span>
+                </Link>
               ))}
-            </ul>
+            </div>
           </section>
         )}
 
-        {/* FAQ — visible content matching FAQPage schema for AI engines */}
+        {/* ── FAQ ── */}
         <section
           aria-label="Frequently asked questions"
-          className="max-w-3xl mx-auto px-6 py-16 border-t border-white/10"
+          style={{
+            maxWidth: 768,
+            margin: "0 auto",
+            padding: "80px 24px",
+            borderTop: "1px solid rgba(255,255,255,0.06)",
+          }}
         >
-          <h2 className="font-[family-name:var(--font-anton)] text-3xl md:text-4xl font-bold uppercase tracking-tight text-white mb-8 text-center">
+          <h2
+            style={{
+              fontFamily: "var(--font-anton)",
+              fontSize: "clamp(1.75rem, 4vw, 2.25rem)",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "-0.02em",
+              color: "#ffffff",
+              marginBottom: 40,
+              textAlign: "center",
+            }}
+          >
             Sessions FAQ
           </h2>
-          <dl className="space-y-6">
+          <dl style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {EVENTS_FAQS.map((faq) => (
               <div
                 key={faq.question}
-                className="bg-white/5 border border-white/10 rounded-2xl p-6"
+                style={{
+                  background: "#111",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderLeft: "3px solid rgba(182,255,0,0.4)",
+                  borderRadius: 16,
+                  padding: 24,
+                }}
               >
-                <dt className="font-[family-name:var(--font-anton)] text-lg font-bold uppercase tracking-tight text-white mb-2">
+                <dt
+                  style={{
+                    fontFamily: "var(--font-inter-tight)",
+                    fontSize: "1rem",
+                    fontWeight: 700,
+                    color: "#ffffff",
+                    marginBottom: 8,
+                  }}
+                >
                   {faq.question}
                 </dt>
-                <dd className="text-white/70 text-sm font-[family-name:var(--font-inter-tight)] leading-relaxed">
+                <dd
+                  style={{
+                    fontFamily: "var(--font-inter-tight)",
+                    fontSize: "0.875rem",
+                    color: "rgba(255,255,255,0.5)",
+                    lineHeight: 1.7,
+                    margin: 0,
+                  }}
+                >
                   {faq.answer}
                 </dd>
               </div>
@@ -366,18 +688,94 @@ export default async function EventsIndexPage({
           </dl>
         </section>
 
-        {/* CTA */}
-        <section className="border-t border-white/10 py-16 text-center">
-          <p className="text-white/60 mb-4 font-[family-name:var(--font-inter-tight)]">
-            Want to host your own session?
-          </p>
-          <SmartDownloadLink
-            className="inline-block px-8 py-4 bg-[#B6FF00] text-black font-bold rounded-full hover:bg-[#B6FF00]/90 transition-colors font-[family-name:var(--font-anton)] text-lg uppercase tracking-wide"
-          >
-            Get the App — Host for Free
-          </SmartDownloadLink>
+        {/* ── Host CTA ── */}
+        <section
+          style={{
+            padding: "80px 24px",
+            textAlign: "center",
+            position: "relative",
+            borderTop: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              background:
+                "radial-gradient(ellipse at center bottom, rgba(182,255,0,0.04) 0%, transparent 60%)",
+            }}
+          />
+          <div style={{ position: "relative" }}>
+            <p
+              style={{
+                color: "rgba(255,255,255,0.4)",
+                marginBottom: 8,
+                fontFamily: "var(--font-inter-tight)",
+                fontSize: "0.875rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.15em",
+              }}
+            >
+              Got a pitch? Got a group?
+            </p>
+            <h2
+              style={{
+                fontFamily: "var(--font-anton)",
+                fontSize: "clamp(1.75rem, 4vw, 2.25rem)",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "-0.02em",
+                color: "#ffffff",
+                marginBottom: 24,
+              }}
+            >
+              Host Your Own Session
+            </h2>
+            <SmartDownloadLink
+              style={{
+                display: "inline-block",
+                padding: "16px 40px",
+                background: "#B6FF00",
+                color: "#000000",
+                fontWeight: 700,
+                borderRadius: 50,
+                textDecoration: "none",
+                fontFamily: "var(--font-anton)",
+                fontSize: "1.125rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                boxShadow: "0 0 30px rgba(182,255,0,0.2)",
+              }}
+            >
+              Get the App \u2014 Host for Free
+            </SmartDownloadLink>
+          </div>
         </section>
       </main>
+
+      {/* ── Animations + hover styles ── */}
+      <style>{`
+        @keyframes fadeSlideUp {
+          from {
+            opacity: 0;
+            transform: translateY(24px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .city-link:hover {
+          border-color: rgba(182,255,0,0.3) !important;
+          background: rgba(255,255,255,0.06) !important;
+          color: #fff !important;
+        }
+        .nav-link:hover {
+          color: #fff !important;
+        }
+      `}</style>
     </>
   );
 }
