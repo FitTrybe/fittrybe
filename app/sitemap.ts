@@ -22,7 +22,7 @@
 import type { MetadataRoute } from "next";
 import { seoConfig } from "@/lib/seo-config";
 import { getPublishedPosts } from "@/lib/posts";
-import { getUpcomingEventCities, getUpcomingEvents } from "@/lib/events";
+import { getUpcomingEventCities, getUpcomingEvents, citySlug } from "@/lib/events";
 import { getActiveVenues } from "@/lib/venues";
 import { getAllSportSlugs } from "@/lib/sports";
 
@@ -78,11 +78,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   }));
 
-  // City + sport×city programmatic pages — fed by live area data
+  // City + sport×city programmatic pages — fed by live area data.
+  // Only include sport×city combos that actually have events to avoid
+  // wasting crawl budget on empty pages.
   let cityPages: MetadataRoute.Sitemap = [];
   const sportCityPages: MetadataRoute.Sitemap = [];
+  let allEvents: Awaited<ReturnType<typeof getUpcomingEvents>> = [];
   try {
-    const cities = await getUpcomingEventCities();
+    const [cities, events] = await Promise.all([
+      getUpcomingEventCities(),
+      getUpcomingEvents(),
+    ]);
+    allEvents = events;
+
     cityPages = cities.map((c) => ({
       url: `${BASE_URL}/events/in/${c.slug}`,
       lastModified: now,
@@ -90,17 +98,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: c.count > 5 ? 0.8 : 0.7,
     }));
 
+    // Build a set of sport+city pairs that actually have upcoming events
+    const activeSportCityPairs = new Set<string>();
+    for (const event of events) {
+      if (!event.isCancelled && event.locationArea) {
+        activeSportCityPairs.add(`${event.sportId}::${citySlug(event.locationArea)}`);
+      }
+    }
+
     const sports = getAllSportSlugs();
-    // Cap to top 20 cities × all sports — anything past that is mostly noise
     const topCities = cities.slice(0, 20);
     for (const city of topCities) {
       for (const sport of sports) {
-        sportCityPages.push({
-          url: `${BASE_URL}/events/${sport}/in/${city.slug}`,
-          lastModified: now,
-          changeFrequency: "daily",
-          priority: 0.6,
-        });
+        if (activeSportCityPairs.has(`${sport}::${city.slug}`)) {
+          sportCityPages.push({
+            url: `${BASE_URL}/events/${sport}/in/${city.slug}`,
+            lastModified: now,
+            changeFrequency: "daily",
+            priority: 0.6,
+          });
+        }
       }
     }
   } catch {
@@ -137,9 +154,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Event detail pages — UPCOMING ONLY. Past/cancelled events are noindex
   // at the page level; including them here would waste crawl budget.
+  // Reuses the events already fetched for sport×city filtering above.
   let eventPages: MetadataRoute.Sitemap = [];
   try {
-    const events = await getUpcomingEvents();
+    const events = allEvents.length > 0 ? allEvents : await getUpcomingEvents();
     eventPages = events
       .filter((e) => !e.isCancelled)
       .map((event) => ({
