@@ -87,6 +87,8 @@ export default function SiteNav() {
       <div id="mobile-menu" className={`mobile-menu${menuOpen ? " open" : ""}`} role="menu" aria-hidden={!menuOpen}>
         <Link href="/sports" className="nav-link" onClick={closeMenu} role="menuitem">Sports</Link>
         <Link href="/events" className="nav-link" onClick={closeMenu} role="menuitem">Sessions</Link>
+        <Link href="/care-homes" className="nav-link" onClick={closeMenu} role="menuitem">Care Homes</Link>
+        <Link href="/sen-sessions" className="nav-link" onClick={closeMenu} role="menuitem">SEN</Link>
         <Link href="/blog" className="nav-link" onClick={closeMenu} role="menuitem">Blog</Link>
         <Link href="/support" className="nav-link" onClick={closeMenu} role="menuitem">Support</Link>
         <Link href="/book-a-call" className="nav-link" onClick={closeMenu} role="menuitem">Book a Call</Link>
