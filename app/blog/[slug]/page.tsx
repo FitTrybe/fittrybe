@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getBlogPost, getAllBlogSlugs } from "@/lib/posts";
-import { Wordmark } from "@/components/brand/Wordmark";
+import SiteNav from "@/components/SiteNav";
 import SmartDownloadLink from "@/components/SmartDownloadLink";
 import { seoConfig, buildCanonicalUrl } from "@/lib/seo-config";
 import {
@@ -137,17 +137,7 @@ export default async function BlogPostPage({
 
       <main style={{ minHeight: "100vh", background: "#050505", color: "#fff" }}>
         {/* Nav */}
-        <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 800, margin: "0 auto", padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <Link href="/" aria-label="Fittrybe — return to homepage" style={{ display: "inline-flex", alignItems: "center" }}>
-            <Wordmark height={28} />
-          </Link>
-          <Link href="/blog" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", textDecoration: "none", fontFamily: "var(--font-inter-tight)" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            All articles
-          </Link>
-        </nav>
+        <SiteNav />
 
         <article itemScope itemType="https://schema.org/Article" style={{ maxWidth: 800, margin: "0 auto", padding: "48px 24px 80px" }}>
           {/* Tags */}

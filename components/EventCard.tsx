@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { FittrybeEvent } from "@/lib/events";
 import { sportEmoji, formatEventTime, formatPrice } from "@/lib/events";
 
@@ -63,9 +64,13 @@ export default function EventCard({ event }: EventCardProps) {
           {/* Image with gradient overlay */}
           <div style={{ position: "relative", aspectRatio: "3/2", overflow: "hidden" }}>
             {coverImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={coverImage} alt={event.title} className="event-card-img"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              <Image
+                src={coverImage}
+                alt={event.title}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="event-card-img"
+                style={{ objectFit: "cover" }}
               />
             ) : (
               <div style={{
@@ -168,11 +173,16 @@ export default function EventCard({ event }: EventCardProps) {
               {event.hostName ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
                   {event.hostAvatar ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={event.hostAvatar} alt="" style={{
-                      width: 26, height: 26, borderRadius: "50%", objectFit: "cover", flexShrink: 0,
-                      border: event.hostVerified ? "2px solid #B6FF00" : "2px solid rgba(255,255,255,0.08)",
-                    }} />
+                    <Image
+                      src={event.hostAvatar}
+                      alt=""
+                      width={26}
+                      height={26}
+                      style={{
+                        borderRadius: "50%", objectFit: "cover", flexShrink: 0,
+                        border: event.hostVerified ? "2px solid #B6FF00" : "2px solid rgba(255,255,255,0.08)",
+                      }}
+                    />
                   ) : (
                     <div style={{
                       width: 26, height: 26, borderRadius: "50%", flexShrink: 0,

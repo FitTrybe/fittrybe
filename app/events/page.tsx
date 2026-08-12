@@ -14,7 +14,7 @@ import {
 } from "@/lib/structured-data";
 import EventCard from "@/components/EventCard";
 import Link from "next/link";
-import { Wordmark } from "@/components/brand/Wordmark";
+import SiteNav from "@/components/SiteNav";
 import SmartDownloadLink from "@/components/SmartDownloadLink";
 
 // Revalidate every 60 seconds so new sessions appear without a full rebuild
@@ -206,67 +206,7 @@ export default async function EventsIndexPage({
         }}
       >
         {/* ── Nav ── */}
-        <nav
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            maxWidth: 1200,
-            margin: "0 auto",
-            padding: "16px 24px",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-            background: "transparent",
-          }}
-        >
-          <Link
-            href="/"
-            aria-label="Fittrybe \u2014 return to homepage"
-            style={{ display: "inline-flex", alignItems: "center" }}
-          >
-            <Wordmark height={28} />
-          </Link>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link
-              href="/sports"
-              style={{
-                fontSize: "0.875rem",
-                color: "rgba(255,255,255,0.5)",
-                textDecoration: "none",
-                fontFamily: "var(--font-inter-tight)",
-              }}
-              className="hidden sm:block nav-link"
-            >
-              Sports
-            </Link>
-            <Link
-              href="/blog"
-              style={{
-                fontSize: "0.875rem",
-                color: "rgba(255,255,255,0.5)",
-                textDecoration: "none",
-                fontFamily: "var(--font-inter-tight)",
-              }}
-              className="hidden sm:block nav-link"
-            >
-              Blog
-            </Link>
-            <SmartDownloadLink
-              style={{
-                display: "inline-block",
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                padding: "10px 20px",
-                borderRadius: 50,
-                background: "#B6FF00",
-                color: "#000000",
-                textDecoration: "none",
-                fontFamily: "var(--font-inter-tight)",
-              }}
-            >
-              Get the App
-            </SmartDownloadLink>
-          </div>
-        </nav>
+        <SiteNav />
 
         {/* ── Hero ── */}
         <section
@@ -749,7 +689,7 @@ export default async function EventsIndexPage({
                 boxShadow: "0 0 30px rgba(182,255,0,0.2)",
               }}
             >
-              Get the App \u2014 Host for Free
+              Get the App — Host for Free
             </SmartDownloadLink>
           </div>
         </section>

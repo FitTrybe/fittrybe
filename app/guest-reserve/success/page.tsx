@@ -19,137 +19,99 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 /**
- * Send the ticket email + add to audience for paid guests.
- * Called once on the success page load after Stripe redirects back.
+ * After Stripe payment: book guest into session, send email.
+ * Uses existing app tables (session_guests, payments, sessions).
  */
-async function confirmPaidReservation(
-  reservationId: string,
+async function confirmPaidGuest(
   sessionId: string,
-  guestName?: string,
-  guestEmail?: string,
+  guestName: string,
+  guestEmail: string,
+  avatarSeed: string,
 ) {
-  const admin = getSupabaseAdmin();
-
-  // Check if already confirmed (prevent duplicate emails on refresh)
-  const { data: reservation } = await admin
-    .from("guest_reservations")
-    .select("id, name, email, avatar_seed, status, session_id")
-    .eq("id", reservationId)
-    .single();
-
-  if (!reservation || reservation.status === "paid") return;
-
-  const name = guestName || reservation.name;
-  const email = guestEmail || reservation.email;
-
-  // Call the edge function to handle booking (spots, session_guests, payment, wallet)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (supabaseUrl && serviceKey) {
-    const { data: session } = await admin
-      .from("sessions")
-      .select("join_price_pence")
-      .eq("id", sessionId)
-      .single();
+  if (!supabaseUrl || !serviceKey) return;
 
-    await fetch(`${supabaseUrl}/functions/v1/guest-web-booking`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${serviceKey}`,
-      },
-      body: JSON.stringify({
-        action: "confirm-booking",
-        session_id: sessionId,
-        guest_name: name,
-        guest_email: email,
-        amount_pence: session?.join_price_pence ?? 0,
-        guest_reservation_id: reservationId,
-      }),
-    }).catch((e) => console.error("[guest-reserve/success] Edge function call failed:", e));
-  }
+  // Call edge function to handle booking (spots, session_guests, payment, wallet)
+  await fetch(`${supabaseUrl}/functions/v1/guest-web-booking`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${serviceKey}`,
+    },
+    body: JSON.stringify({
+      action: "confirm-booking",
+      session_id: sessionId,
+      guest_name: guestName,
+      guest_email: guestEmail,
+      amount_pence: 0, // will be filled by edge function from session data
+    }),
+  }).catch((e) => console.error("[guest-reserve/success] Edge function error:", e));
 
-  // Fetch session for email data
+  // Fetch session for email
+  const admin = getSupabaseAdmin();
   const { data: session } = await admin
     .from("sessions")
     .select("title, sport_id, starts_at, place_name, location_area, join_price_pence")
     .eq("id", sessionId)
     .single();
 
-  if (session) {
+  if (!session) return;
 
-    // Send ticket email + add to audience
-    const resendKey = process.env.RESEND_API_KEY;
-    if (resendKey) {
-      const resend = new Resend(resendKey);
-      const fromEmail = process.env.RESEND_FROM_EMAIL || "FitTrybe <hello@fittrybe.co.uk>";
-      const audienceId = process.env.RESEND_AUDIENCE_ID;
+  // Send ticket email + follow-up + add to audience
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!resendKey) return;
 
-      const ticketData = {
-        guestName: name,
-        guestEmail: email,
-        reservationId: reservation.id,
-        avatarSeed: reservation.avatar_seed || reservation.id.slice(0, 12),
-        sessionTitle: session.title,
-        sportId: session.sport_id ?? "",
-        date: formatEventDate(session.starts_at),
-        time: formatEventTime(session.starts_at),
-        location: session.place_name || session.location_area,
-        locationArea: session.location_area,
-        price: formatPrice(session.join_price_pence ?? 0),
-      };
+  const resend = new Resend(resendKey);
+  const fromEmail = process.env.RESEND_FROM_EMAIL || "FitTrybe <hello@fittrybe.co.uk>";
+  const audienceId = process.env.RESEND_AUDIENCE_ID;
 
-      const { subject, html } = buildGuestTicketEmail(ticketData);
+  const ticketData = {
+    guestName,
+    guestEmail,
+    reservationId: sessionId,
+    avatarSeed,
+    sessionTitle: session.title,
+    sportId: session.sport_id ?? "",
+    date: formatEventDate(session.starts_at),
+    time: formatEventTime(session.starts_at),
+    location: session.place_name || session.location_area,
+    locationArea: session.location_area,
+    price: formatPrice(session.join_price_pence ?? 0),
+  };
 
-      try {
-        await resend.emails.send({
-          from: fromEmail,
-          to: [reservation.email],
-          subject,
-          html,
-          replyTo: "hello@fittrybe.co.uk",
-        });
-      } catch (e) {
-        console.error("[guest-reserve/success] Email failed:", e);
-      }
+  // Ticket email
+  try {
+    const { subject, html } = buildGuestTicketEmail(ticketData);
+    await resend.emails.send({ from: fromEmail, to: [guestEmail], subject, html, replyTo: "hello@fittrybe.co.uk" });
+  } catch (e) {
+    console.error("[guest-reserve/success] Ticket email failed:", e);
+  }
 
-      // Add to audience
-      if (audienceId) {
-        try {
-          const nameParts = name.split(" ");
-          await resend.contacts.create({
-            audienceId,
-            email: email,
-            firstName: nameParts[0] || name,
-            lastName: nameParts.slice(1).join(" ") || undefined,
-            unsubscribed: false,
-          });
-        } catch (e) {
-          console.error("[guest-reserve/success] Audience add failed:", e);
-        }
-      }
+  // Follow-up email (2 hours later)
+  try {
+    const followup = buildGuestFollowupEmail({ guestName, guestEmail, sportId: session.sport_id ?? "", sessionTitle: session.title });
+    await resend.emails.send({
+      from: fromEmail, to: [guestEmail], subject: followup.subject, html: followup.html,
+      replyTo: "francis@fittrybe.co.uk", scheduledAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    });
+  } catch (e) {
+    console.error("[guest-reserve/success] Follow-up failed:", e);
+  }
 
-      // Schedule follow-up "download app, next session free" email (2 hours later)
-      try {
-        const followup = buildGuestFollowupEmail({
-          guestName: name,
-          guestEmail: email,
-          sportId: session.sport_id ?? "",
-          sessionTitle: session.title,
-        });
-        const sendAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
-        await resend.emails.send({
-          from: fromEmail,
-          to: [reservation.email],
-          subject: followup.subject,
-          html: followup.html,
-          replyTo: "francis@fittrybe.co.uk",
-          scheduledAt: sendAt,
-        });
-      } catch (e) {
-        console.error("[guest-reserve/success] Follow-up schedule failed:", e);
-      }
+  // Add to audience
+  if (audienceId) {
+    try {
+      const nameParts = guestName.split(" ");
+      await resend.contacts.create({
+        audienceId, email: guestEmail,
+        firstName: nameParts[0] || guestName,
+        lastName: nameParts.slice(1).join(" ") || undefined,
+        unsubscribed: false,
+      });
+    } catch (e) {
+      console.error("[guest-reserve/success] Audience failed:", e);
     }
   }
 }
@@ -157,16 +119,15 @@ async function confirmPaidReservation(
 export default async function GuestReserveSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string; reservation_id?: string; name?: string; email?: string }>;
+  searchParams: Promise<{ session_id?: string; name?: string; email?: string; avatar?: string }>;
 }) {
-  const { session_id, reservation_id, name: guestName, email: guestEmail } = await searchParams;
+  const { session_id, name, email, avatar } = await searchParams;
 
-  // For paid sessions — confirm reservation via edge function, send email, update spots
-  if (reservation_id && session_id) {
-    await confirmPaidReservation(reservation_id, session_id, guestName, guestEmail);
+  // For paid sessions — confirm booking via edge function + send emails
+  if (session_id && name && email) {
+    await confirmPaidGuest(session_id, name, email, avatar || session_id.slice(0, 12));
   }
 
-  // Fetch session for display
   const event = session_id ? await getEventById(session_id) : null;
 
   return (
@@ -176,7 +137,6 @@ export default async function GuestReserveSuccessPage({
       </Link>
 
       <div style={{ maxWidth: 440, width: "100%", textAlign: "center" }}>
-        {/* Success animation */}
         <div style={{
           width: 80, height: 80, borderRadius: 20,
           background: "rgba(182,255,0,0.1)", border: "1px solid rgba(182,255,0,0.2)",
@@ -196,8 +156,7 @@ export default async function GuestReserveSuccessPage({
 
         <p style={{
           color: "rgba(255,255,255,0.5)", fontSize: "0.95rem",
-          fontFamily: "var(--font-inter-tight)", lineHeight: 1.7,
-          marginBottom: 8,
+          fontFamily: "var(--font-inter-tight)", lineHeight: 1.7, marginBottom: 8,
         }}>
           Your spot{event ? ` for ${event.title}` : ""} has been reserved.
         </p>

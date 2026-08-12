@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import { getPublishedPosts } from "@/lib/posts";
 import { buildCanonicalUrl, seoConfig } from "@/lib/seo-config";
+import {
+  buildGraphSchema,
+  buildWebPageSchema,
+  buildBreadcrumbSchema,
+} from "@/lib/structured-data";
 import BlogCard from "@/components/BlogCard";
 import Link from "next/link";
-import { Wordmark } from "@/components/brand/Wordmark";
+import SiteNav from "@/components/SiteNav";
 import SmartDownloadLink from "@/components/SmartDownloadLink";
 
 const blogOGImage = `${seoConfig.siteUrl}/api/og?title=${encodeURIComponent(
@@ -40,22 +45,27 @@ export const revalidate = 60;
 export default async function BlogIndexPage() {
   const posts = await getPublishedPosts();
 
+  const blogJsonLd = buildGraphSchema([
+    buildWebPageSchema({
+      url: buildCanonicalUrl("/blog"),
+      title: "Fittrybe Blog — Sports, Fitness & Community",
+      description: "Tips on finding local sports sessions, fitness guides, and community stories from the Fittrybe team.",
+      breadcrumb: [
+        { name: "Home", url: seoConfig.siteUrl },
+        { name: "Blog", url: buildCanonicalUrl("/blog") },
+      ],
+    }),
+    buildBreadcrumbSchema([
+      { name: "Home", url: seoConfig.siteUrl },
+      { name: "Blog", url: buildCanonicalUrl("/blog") },
+    ]),
+  ]);
+
   return (
     <main style={{ minHeight: "100vh", background: "#050505", color: "#fff" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: blogJsonLd }} />
       {/* Nav */}
-      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 1200, margin: "0 auto", padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <Link href="/" aria-label="Fittrybe — return to homepage" style={{ display: "inline-flex", alignItems: "center" }}>
-          <Wordmark height={28} />
-        </Link>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href="/events" className="hidden sm:block" style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", textDecoration: "none", fontFamily: "var(--font-inter-tight)" }}>
-            Sessions
-          </Link>
-          <SmartDownloadLink style={{ display: "inline-block", fontSize: "0.875rem", fontWeight: 600, padding: "10px 20px", borderRadius: 50, background: "#B6FF00", color: "#000", textDecoration: "none", fontFamily: "var(--font-inter-tight)" }}>
-            Get the App
-          </SmartDownloadLink>
-        </div>
-      </nav>
+      <SiteNav />
 
       {/* Hero */}
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px 64px", textAlign: "center", position: "relative" }}>

@@ -1,13 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Wordmark } from "@/components/brand/Wordmark";
+import SiteNav from "@/components/SiteNav";
 import {
   APP_STORE_URL,
   PLAY_STORE_URL,
-  WEB_APP_URL,
   detectPlatform,
   type Platform,
 } from "@/lib/download-links";
@@ -77,6 +74,7 @@ export default function DownloadPageClient() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: pageStyles }} />
+      <SiteNav />
       <main
         id="main-content"
         aria-label="Download Fittrybe"
@@ -92,20 +90,6 @@ export default function DownloadPageClient() {
         }}
       >
         <div className="dl-card" style={{ width: "100%", maxWidth: 520, textAlign: "center" }}>
-          <Link
-            href="/"
-            aria-label="Fittrybe — home"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 10,
-              textDecoration: "none",
-              marginBottom: "2.5rem",
-            }}
-          >
-            <Image src="/logo-mark.png" alt="" width={36} height={36} priority />
-            <Wordmark height={28} />
-          </Link>
 
           <p
             style={{
@@ -190,30 +174,6 @@ export default function DownloadPageClient() {
             </a>
           </div>
 
-          {platform === "web" && (
-            <a
-              href={WEB_APP_URL}
-              className="dl-btn dl-btn-primary"
-              aria-label="Open Fittrybe in your browser"
-              target="_blank"
-              rel="noopener"
-              style={{ marginTop: "0.25rem" }}
-            >
-              Open the Web App →
-            </a>
-          )}
-
-          <p style={{ marginTop: "3rem", color: "#4B5563", fontSize: "0.78rem" }}>
-            Already have the app?{" "}
-            <a
-              href={WEB_APP_URL}
-              style={{ color: "#B6FF00", textDecoration: "none" }}
-              target="_blank"
-              rel="noopener"
-            >
-              Open Fittrybe
-            </a>
-          </p>
         </div>
       </main>
     </>

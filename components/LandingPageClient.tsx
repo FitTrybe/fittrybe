@@ -201,7 +201,7 @@ const globalStyles = `
   .mobile-menu .nav-link { font-size: 1.05rem; padding: 0.5rem 0; }
   .mobile-menu .nav-cta { text-align: center; margin-top: 0.4rem; padding: 0.75rem 1.3rem; font-size: 0.95rem; }
 
-  @media (max-width: 720px) {
+  @media (max-width: 1024px) {
     .site-nav-links { display: none !important; }
     .mobile-menu-toggle { display: inline-flex !important; }
   }
@@ -438,9 +438,11 @@ function Navbar() {
         <div className="site-nav-links" style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
           <Link href="/sports" aria-label="Browse sports on Fittrybe" className="nav-link">Sports</Link>
           <Link href="/events" aria-label="View upcoming sports sessions" className="nav-link">Sessions</Link>
+          <Link href="/care-homes" aria-label="Care home activity sessions" className="nav-link">Care Homes</Link>
+          <Link href="/sen-sessions" aria-label="SEN adapted sport sessions" className="nav-link">SEN</Link>
           <Link href="/blog" aria-label="Read the Fittrybe blog" className="nav-link">Blog</Link>
           <Link href="/support" aria-label="Contact Fittrybe support" className="nav-link">Support</Link>
-          <Link href="/login" aria-label="Sign in to Fittrybe" className="nav-link">Sign in</Link>
+          <Link href="/book-a-call" aria-label="Book a call with FitTrybe" className="nav-link">Book a Call</Link>
           <SmartDownloadLink aria-label="Download Fittrybe on your phone" className="nav-cta">Get the App</SmartDownloadLink>
         </div>
 
@@ -474,7 +476,7 @@ function Navbar() {
         <Link href="/events" className="nav-link" onClick={closeMenu} role="menuitem">Sessions</Link>
         <Link href="/blog" className="nav-link" onClick={closeMenu} role="menuitem">Blog</Link>
         <Link href="/support" className="nav-link" onClick={closeMenu} role="menuitem">Support</Link>
-        <Link href="/login" className="nav-link" onClick={closeMenu} role="menuitem">Sign in</Link>
+        <Link href="/book-a-call" className="nav-link" onClick={closeMenu} role="menuitem">Book a Call</Link>
         <SmartDownloadLink className="nav-cta" onClick={closeMenu} role="menuitem">Get the App</SmartDownloadLink>
       </div>
     </>
@@ -645,18 +647,9 @@ function HeroSection() {
             onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
           >Get the App <IconArrowRight size={16} color="#0D0D0D" /></SmartDownloadLink>
 
-          <a href="#how-it-works" aria-label="Learn how Fittrybe works" style={{
-            color: "#9CA3AF", padding: "0.85rem 2rem",
-            border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8,
-            fontFamily: "var(--font-anton, 'Anton', sans-serif)",
-            fontSize: "1rem", fontWeight: 700, letterSpacing: "0.08em",
-            textTransform: "uppercase", textDecoration: "none",
-            display: "inline-flex", alignItems: "center", gap: "0.5rem",
-            transition: "border-color 0.2s, color 0.2s",
-          }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; e.currentTarget.style.color = "#fff"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#9CA3AF"; }}
-          >▶ How It Works</a>
+          <a href="/book-a-call" className="cta-secondary" aria-label="Book a call with FitTrybe">
+            📞 Book a Call
+          </a>
         </motion.div>
       </div>
 
@@ -2119,6 +2112,8 @@ function Footer() {
           {[
             { label: "Sports", href: "/sports" },
             { label: "Sessions", href: "/events" },
+            { label: "Care Homes", href: "/care-homes" },
+            { label: "SEN Sessions", href: "/sen-sessions" },
             { label: "Blog", href: "/blog" },
             { label: "Get the App", href: "/download" },
             { label: "Support", href: "/support" },
@@ -2173,7 +2168,7 @@ export default function LandingPageClient({
         <BlogPreviewSection />
         <FAQSection faqs={faqs} />
       </main>
-      <Footer />
+      {/* Footer is now rendered globally from layout.tsx */}
     </>
   );
 }

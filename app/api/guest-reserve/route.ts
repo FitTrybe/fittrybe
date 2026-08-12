@@ -1,24 +1,31 @@
 /**
  * POST /api/guest-reserve
  *
- * Creates a guest reservation for a session. No auth required — just name + email.
+ * Creates a guest reservation using the app's existing tables:
+ *   - session_guests (for the guest entry — visible on host dashboard)
+ *   - payments (for paid sessions — after Stripe confirms)
+ *   - sessions (decrement spots_left, increment participants_count)
  *
- * For paid sessions: calls the Supabase Edge Function (which has Stripe keys)
- *   to create a Checkout Session and returns the redirect URL.
- * For free sessions: confirms the reservation immediately.
+ * No new tables. No auth required — just name + email.
  *
- * No Stripe keys needed on Vercel — all payments go through Supabase.
+ * For paid sessions: calls the Supabase Edge Function to create Stripe Checkout.
+ * For free sessions: confirms immediately.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { buildGuestTicketEmail, type GuestTicketData } from "@/lib/guest-ticket-email";
 import { buildGuestFollowupEmail } from "@/lib/guest-followup-email";
+import { buildHostNotifyEmail } from "@/lib/guest-host-notify-email";
+import { buildGuestReminderEmail } from "@/lib/guest-reminder-email";
 import { Resend } from "resend";
 import crypto from "crypto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// The system guest user ID — all web guests are tied to this account
+const GUEST_UID = "00000000-0000-0000-0000-000000000001";
 
 function getSiteUrl(req: NextRequest): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
@@ -47,9 +54,12 @@ function formatPrice(pence: number): string {
   return `£${(pence / 100).toFixed(2)}`;
 }
 
-/** Send confirmation ticket email + add guest to Resend audience (non-blocking). */
-async function sendConfirmationAndAddToAudience(
+/** Send all emails: ticket to guest, notification to host, schedule reminder + follow-up. */
+async function sendAllEmails(
   ticketData: GuestTicketData,
+  hostInfo: { hostName: string; hostEmail: string } | null,
+  sessionStartsAt: string,
+  spotsLeft: number,
 ) {
   const resendKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.RESEND_FROM_EMAIL || "FitTrybe <hello@fittrybe.co.uk>";
@@ -66,60 +76,102 @@ async function sendConfirmationAndAddToAudience(
   // Send the ticket email
   try {
     const { data, error } = await resend.emails.send({
-      from: fromEmail,
-      to: [ticketData.guestEmail],
-      subject,
-      html,
+      from: fromEmail, to: [ticketData.guestEmail], subject, html,
       replyTo: "hello@fittrybe.co.uk",
     });
-    if (error) {
-      console.error("[guest-reserve] Email send error:", error);
-    } else {
-      console.log(`[guest-reserve] Ticket email sent to ${ticketData.guestEmail} (${data?.id})`);
-    }
+    if (error) console.error("[guest-reserve] Email send error:", error);
+    else console.log(`[guest-reserve] Ticket email sent to ${ticketData.guestEmail} (${data?.id})`);
   } catch (e) {
     console.error("[guest-reserve] Email send failed:", e);
   }
 
-  // Add to Resend audience (mailing list)
+  // Add to Resend audience
   if (audienceId) {
     try {
       const nameParts = ticketData.guestName.split(" ");
       await resend.contacts.create({
-        audienceId,
-        email: ticketData.guestEmail,
+        audienceId, email: ticketData.guestEmail,
         firstName: nameParts[0] || ticketData.guestName,
         lastName: nameParts.slice(1).join(" ") || undefined,
         unsubscribed: false,
       });
-      console.log(`[guest-reserve] Added ${ticketData.guestEmail} to audience`);
     } catch (e) {
       console.error("[guest-reserve] Audience add failed:", e);
     }
   }
 
-  // Schedule the "download app, next session free" follow-up email (2 hours later)
+  // Schedule follow-up "download app, next session free" email (2 hours after booking)
   try {
     const followup = buildGuestFollowupEmail({
-      guestName: ticketData.guestName,
-      guestEmail: ticketData.guestEmail,
-      sportId: ticketData.sportId,
-      sessionTitle: ticketData.sessionTitle,
+      guestName: ticketData.guestName, guestEmail: ticketData.guestEmail,
+      sportId: ticketData.sportId, sessionTitle: ticketData.sessionTitle,
     });
-
-    const sendAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(); // 2 hours from now
-
+    const followupAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
     await resend.emails.send({
-      from: fromEmail,
-      to: [ticketData.guestEmail],
-      subject: followup.subject,
-      html: followup.html,
-      replyTo: "francis@fittrybe.co.uk",
-      scheduledAt: sendAt,
+      from: fromEmail, to: [ticketData.guestEmail],
+      subject: followup.subject, html: followup.html,
+      replyTo: "francis@fittrybe.co.uk", scheduledAt: followupAt,
     });
-    console.log(`[guest-reserve] Follow-up email scheduled for ${ticketData.guestEmail} at ${sendAt}`);
+    console.log(`[guest-reserve] Follow-up scheduled for ${ticketData.guestEmail}`);
   } catch (e) {
     console.error("[guest-reserve] Follow-up schedule failed:", e);
+  }
+
+  // Send notification to session host
+  if (hostInfo?.hostEmail) {
+    try {
+      const hostEmail = buildHostNotifyEmail({
+        hostName: hostInfo.hostName,
+        hostEmail: hostInfo.hostEmail,
+        guestName: ticketData.guestName,
+        guestEmail: ticketData.guestEmail,
+        sessionTitle: ticketData.sessionTitle,
+        sportId: ticketData.sportId,
+        date: ticketData.date,
+        time: ticketData.time,
+        location: ticketData.location,
+        price: ticketData.price,
+        spotsLeft,
+      });
+      await resend.emails.send({
+        from: fromEmail, to: [hostInfo.hostEmail],
+        subject: hostEmail.subject, html: hostEmail.html,
+        replyTo: "hello@fittrybe.co.uk",
+      });
+      console.log(`[guest-reserve] Host notified: ${hostInfo.hostEmail}`);
+    } catch (e) {
+      console.error("[guest-reserve] Host notify failed:", e);
+    }
+  }
+
+  // Schedule reminder email 2 hours before session starts
+  try {
+    const sessionStart = new Date(sessionStartsAt).getTime();
+    const reminderTime = sessionStart - 2 * 60 * 60 * 1000; // 2 hours before
+
+    // Only schedule if the session is more than 2 hours away
+    if (reminderTime > Date.now()) {
+      const reminder = buildGuestReminderEmail({
+        guestName: ticketData.guestName,
+        guestEmail: ticketData.guestEmail,
+        sessionTitle: ticketData.sessionTitle,
+        sportId: ticketData.sportId,
+        date: ticketData.date,
+        time: ticketData.time,
+        location: ticketData.location,
+        locationArea: ticketData.locationArea,
+        sessionId: ticketData.reservationId,
+      });
+      await resend.emails.send({
+        from: fromEmail, to: [ticketData.guestEmail],
+        subject: reminder.subject, html: reminder.html,
+        replyTo: "hello@fittrybe.co.uk",
+        scheduledAt: new Date(reminderTime).toISOString(),
+      });
+      console.log(`[guest-reserve] Reminder scheduled for ${ticketData.guestEmail} at ${new Date(reminderTime).toISOString()}`);
+    }
+  } catch (e) {
+    console.error("[guest-reserve] Reminder schedule failed:", e);
   }
 }
 
@@ -132,7 +184,6 @@ export async function POST(req: NextRequest) {
       email?: string;
     };
 
-    // Validate inputs
     if (!sessionId || typeof sessionId !== "string") {
       return NextResponse.json({ error: "Session ID is required." }, { status: 400 });
     }
@@ -144,60 +195,53 @@ export async function POST(req: NextRequest) {
     }
 
     const admin = getSupabaseAdmin();
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim().toLowerCase();
 
-    // Fetch session to check availability and price
+    // Fetch session
     const { data: session, error: sessionError } = await admin
       .from("sessions")
-      .select("id, title, sport_id, spots_left, join_price_pence, is_cancelled, starts_at, location_area, place_name")
+      .select("id, title, sport_id, spots_left, participants_count, join_price_pence, is_cancelled, starts_at, location_area, place_name, host_id")
       .eq("id", sessionId)
       .single();
 
     if (sessionError || !session) {
       return NextResponse.json({ error: "Session not found." }, { status: 404 });
     }
-
     if (session.is_cancelled) {
       return NextResponse.json({ error: "This session has been cancelled." }, { status: 400 });
     }
-
     if (session.spots_left <= 0) {
       return NextResponse.json({ error: "This session is full." }, { status: 400 });
     }
-
     if (new Date(session.starts_at) < new Date()) {
       return NextResponse.json({ error: "This session has already started." }, { status: 400 });
     }
 
+    // Check for duplicate — same email already booked this session
+    const { data: existingGuest } = await admin
+      .from("session_guests")
+      .select("id")
+      .eq("session_id", sessionId)
+      .like("guest_label", `%${trimmedEmail}%`)
+      .maybeSingle();
+
+    if (existingGuest) {
+      return NextResponse.json({ error: "You've already reserved a spot for this session." }, { status: 400 });
+    }
+
+    // Avatar seed
     const avatarSeed = crypto
       .createHash("md5")
-      .update(email.trim().toLowerCase())
+      .update(trimmedEmail)
       .digest("hex")
       .slice(0, 12);
 
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim().toLowerCase();
     const pricePence = session.join_price_pence ?? 0;
-
-    // Create the guest reservation
-    const { data: reservation, error: insertError } = await admin
-      .from("guest_reservations")
-      .insert({
-        session_id: sessionId,
-        name: trimmedName,
-        email: trimmedEmail,
-        avatar_seed: avatarSeed,
-        status: pricePence > 0 ? "pending" : "confirmed",
-      })
-      .select("id")
-      .single();
-
-    if (insertError || !reservation) {
-      console.error("[guest-reserve] insert error:", insertError);
-      return NextResponse.json({ error: "Could not create reservation." }, { status: 500 });
-    }
+    const guestLabel = `${trimmedName} (${trimmedEmail})`;
 
     if (pricePence > 0) {
-      // Paid session — call Supabase Edge Function to create Stripe Checkout
+      // ── PAID SESSION: create Stripe Checkout via Edge Function ──
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -217,11 +261,13 @@ export async function POST(req: NextRequest) {
           action: "create-checkout",
           session_id: sessionId,
           amount_pence: pricePence,
-          guest_reservation_id: reservation.id,
+          guest_name: trimmedName,
           guest_email: trimmedEmail,
+          guest_label: guestLabel,
+          avatar_seed: avatarSeed,
           session_title: session.title,
           session_location: session.place_name || session.location_area,
-          success_url: `${siteUrl}/guest-reserve/success?session_id=${sessionId}&reservation_id=${reservation.id}&name=${encodeURIComponent(trimmedName)}&email=${encodeURIComponent(trimmedEmail)}`,
+          success_url: `${siteUrl}/guest-reserve/success?session_id=${sessionId}&name=${encodeURIComponent(trimmedName)}&email=${encodeURIComponent(trimmedEmail)}&avatar=${avatarSeed}`,
           cancel_url: `${siteUrl}/events/${sessionId}?cancelled=1`,
         }),
       });
@@ -230,55 +276,83 @@ export async function POST(req: NextRequest) {
 
       if (!stripeRes.ok || stripeData.error) {
         console.error("[guest-reserve] edge function error:", stripeData);
-        // Clean up the pending reservation
-        await admin.from("guest_reservations").delete().eq("id", reservation.id);
         return NextResponse.json(
           { error: stripeData.error || "Payment service error." },
           { status: 502 },
         );
       }
 
-      // Save the Stripe session ID
-      if (stripeData.checkout_session_id) {
-        await admin
-          .from("guest_reservations")
-          .update({ stripe_session_id: stripeData.checkout_session_id })
-          .eq("id", reservation.id);
-      }
-
       return NextResponse.json({ url: stripeData.url }, { status: 200 });
-    } else {
-      // Free session — update spots
-      const { data: current } = await admin
-        .from("sessions")
-        .select("spots_left, participants_count")
-        .eq("id", sessionId)
-        .single();
 
-      if (current) {
-        await admin
-          .from("sessions")
-          .update({
-            spots_left: Math.max(0, (current.spots_left ?? 0) - 1),
-            participants_count: (current.participants_count ?? 0) + 1,
-          })
-          .eq("id", sessionId);
+    } else {
+      // ── FREE SESSION: book directly using app's existing tables ──
+
+      // 1. Add to session_guests
+      const { error: guestError } = await admin.from("session_guests").insert({
+        session_id: sessionId,
+        invited_by: GUEST_UID,
+        guest_label: guestLabel,
+        status: "approved",
+      });
+
+      if (guestError) {
+        console.error("[guest-reserve] session_guests insert error:", guestError);
+        return NextResponse.json({ error: "Could not create reservation." }, { status: 500 });
       }
 
-      // Send confirmation email + add to audience (non-blocking)
-      sendConfirmationAndAddToAudience({
-        guestName: trimmedName,
-        guestEmail: trimmedEmail,
-        reservationId: reservation.id,
-        avatarSeed: avatarSeed,
-        sessionTitle: session.title,
-        sportId: session.sport_id ?? "",
-        date: formatDate(session.starts_at),
-        time: formatTime(session.starts_at),
-        location: session.place_name || session.location_area,
-        locationArea: session.location_area,
-        price: formatPrice(pricePence),
-      }).catch(() => {});
+      // 2. Add to event_participants (keeps app counts in sync)
+      await admin.from("event_participants").insert({
+        session_id: sessionId,
+        user_id: GUEST_UID,
+        status: "approved",
+        payment_status: "free",
+        role: "player",
+      }).then(() => {}, (e: unknown) => console.error("[guest-reserve] event_participants insert:", e));
+
+      // 3. Decrement spots_left, increment participants_count
+      await admin
+        .from("sessions")
+        .update({
+          spots_left: Math.max(0, session.spots_left - 1),
+          participants_count: (session.participants_count ?? 0) + 1,
+        })
+        .eq("id", sessionId);
+
+      // 4. Fetch host profile for notification email
+      let hostInfo: { hostName: string; hostEmail: string } | null = null;
+      if (session.host_id) {
+        const { data: hostProfile } = await admin
+          .from("profiles")
+          .select("full_name, display_name, email")
+          .eq("id", session.host_id)
+          .maybeSingle();
+        if (hostProfile?.email) {
+          hostInfo = {
+            hostName: hostProfile.display_name || hostProfile.full_name || "Host",
+            hostEmail: hostProfile.email,
+          };
+        }
+      }
+
+      // 5. Send all emails (ticket, host notify, reminder, follow-up) — non-blocking
+      sendAllEmails(
+        {
+          guestName: trimmedName,
+          guestEmail: trimmedEmail,
+          reservationId: sessionId,
+          avatarSeed,
+          sessionTitle: session.title,
+          sportId: session.sport_id ?? "",
+          date: formatDate(session.starts_at),
+          time: formatTime(session.starts_at),
+          location: session.place_name || session.location_area,
+          locationArea: session.location_area,
+          price: formatPrice(pricePence),
+        },
+        hostInfo,
+        session.starts_at,
+        Math.max(0, session.spots_left - 1),
+      ).catch(() => {});
 
       return NextResponse.json({ success: true }, { status: 200 });
     }

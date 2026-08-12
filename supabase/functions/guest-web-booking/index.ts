@@ -132,7 +132,17 @@ async function confirmBooking(body: Record<string, unknown>) {
     return { error: 'Could not update session' }
   }
 
-  // ── 3. Add to session_guests (visible on host dashboard) ──────────────
+  // ── 3. Add to event_participants (keeps app counts in sync) ───────────
+  await supabase.from('event_participants').insert({
+    session_id: sessionId,
+    user_id: GUEST_UID,
+    status: 'approved',
+    payment_status: amountPence > 0 ? 'paid' : 'free',
+    amount_paid_pence: amountPence,
+    role: 'player',
+  }).then(() => {}, (e: unknown) => console.error('event_participants insert:', e))
+
+  // ── 4. Add to session_guests (visible on host dashboard) ──────────────
   await supabase.from('session_guests').insert({
     session_id: sessionId,
     invited_by: GUEST_UID,

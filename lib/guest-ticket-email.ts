@@ -72,7 +72,7 @@ export function buildGuestTicketEmail(data: GuestTicketData): {
   const emoji = SPORT_EMOJI[data.sportId?.toLowerCase()] || "🏅";
   const ticketCode = data.reservationId.slice(0, 8).toUpperCase();
   const barcode = generateBarcodeHtml(data.reservationId);
-  const avatarUrl = `https://api.multiavatar.com/${encodeURIComponent(data.avatarSeed)}.png`;
+  const avatarUrl = `https://api.dicebear.com/7.x/fun-emoji/png?seed=${encodeURIComponent(data.avatarSeed)}&size=128`;
 
   const subject = `Your spot is confirmed — ${data.sessionTitle}`;
 
@@ -242,7 +242,7 @@ export function buildGuestTicketEmail(data: GuestTicketData): {
 
     <!-- CTA -->
     <tr><td style="padding:0 0 28px;text-align:center;">
-      <a href="https://fittrybe.co.uk/events/${data.reservationId.split("-")[0]}"
+      <a href="https://fittrybe.co.uk/events/${data.reservationId}"
         style="display:inline-block;padding:14px 36px;background:#B6FF3B;color:#000;font-weight:800;font-size:14px;border-radius:50px;text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;">
         View Session Details
       </a>

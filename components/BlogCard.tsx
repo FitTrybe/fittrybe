@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { BlogPost } from "@/lib/posts";
 
 interface BlogCardProps {
@@ -27,12 +28,13 @@ export default function BlogCard({ post }: BlogCardProps) {
         {/* Cover image */}
         {post.coverImage ? (
           <div style={{ aspectRatio: "16/9", overflow: "hidden", position: "relative" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={post.coverImage}
               alt={post.title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="blog-card-img"
-              style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)" }}
+              style={{ objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)" }}
             />
             <div style={{
               position: "absolute", bottom: 0, left: 0, right: 0, height: "40%",

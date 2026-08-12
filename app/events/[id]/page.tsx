@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Wordmark } from "@/components/brand/Wordmark";
+import SiteNav from "@/components/SiteNav";
 import EventCTAFooter from "@/components/EventCTAFooter";
 import {
   buildSessionKeywords,
@@ -401,21 +401,7 @@ export default async function EventDetailPage({
 
       <main style={{ minHeight: "100vh", background: "#050505", color: "#fff", fontFamily: "var(--font-inter-tight)" }}>
         {/* Nav */}
-        <nav style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", maxWidth: 1200, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" aria-label="Fittrybe — return to homepage" style={{ display: "inline-flex", alignItems: "center" }}>
-            <Wordmark height={28} />
-          </Link>
-          <Link
-            href="/events"
-            className="event-back"
-            style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", transition: "color 0.2s", fontFamily: "var(--font-inter-tight)", display: "flex", alignItems: "center", gap: 6, textDecoration: "none" }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            All sessions
-          </Link>
-        </nav>
+        <SiteNav />
 
         <article style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }} className="lg:py-12">
           {/* Breadcrumb */}

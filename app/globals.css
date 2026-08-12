@@ -410,6 +410,54 @@ html { scroll-behavior: smooth; }
   .bento-grid { gap: 10px !important; }
 }
 
+/* ─── Shared site nav (used on all pages) ─────────────────────────────────── */
+.nav-link {
+  color: #9CA3AF;
+  font-family: var(--font-anton, 'Anton', sans-serif);
+  font-weight: 700; font-size: 0.9rem; letter-spacing: 0.07em;
+  text-transform: uppercase; text-decoration: none;
+  transition: color 0.2s;
+}
+.nav-link:hover { color: #fff; }
+.nav-cta {
+  background: #B6FF00; color: #0D0D0D;
+  padding: 0.45rem 1.3rem; border-radius: 6px;
+  font-family: var(--font-anton, 'Anton', sans-serif);
+  font-weight: 800; font-size: 0.9rem; letter-spacing: 0.07em;
+  text-transform: uppercase; text-decoration: none; white-space: nowrap;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.nav-cta:hover { box-shadow: 0 8px 24px rgba(182,255,0,0.3); transform: translateY(-2px); }
+.mobile-menu-toggle {
+  display: none;
+  width: 40px; height: 40px;
+  align-items: center; justify-content: center;
+  background: transparent; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px; cursor: pointer; color: #fff;
+  transition: background 0.2s, border-color 0.2s;
+}
+.mobile-menu-toggle:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
+.mobile-menu {
+  position: fixed; top: 64px; left: 0; right: 0;
+  background: rgba(5,5,5,0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 1.25rem 5vw 1.75rem;
+  display: flex; flex-direction: column; gap: 1.1rem;
+  transform: translateY(-12px); opacity: 0; pointer-events: none;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  z-index: 99;
+}
+.mobile-menu.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+.mobile-menu .nav-link { font-size: 1.05rem; padding: 0.5rem 0; }
+.mobile-menu .nav-cta { text-align: center; margin-top: 0.4rem; padding: 0.75rem 1.3rem; font-size: 0.95rem; }
+.site-nav-links { display: flex; }
+@media (max-width: 1024px) {
+  .site-nav-links { display: none !important; }
+  .mobile-menu-toggle { display: inline-flex !important; }
+}
+
 /* ─── Event card (used across server components) ─────────────────────────── */
 .event-card {
   background: #111;

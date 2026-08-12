@@ -7,6 +7,7 @@ import type { Metadata, Viewport } from "next";
 import { Anton, Inter_Tight } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import SiteFooter from "@/components/SiteFooter";
 import { seoConfig } from "@/lib/seo-config";
 import {
   buildOrganizationSchema,
@@ -140,6 +141,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         {children}
+        <SiteFooter />
         {seoConfig.analytics.ga4MeasurementId && (
           <>
             {/* lazyOnload: defer to browser idle so analytics doesn't compete

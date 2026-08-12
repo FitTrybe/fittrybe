@@ -43,139 +43,145 @@ export function buildGuestFollowupEmail(data: GuestFollowupData): {
 <body style="background:#000;margin:0;padding:0;" bgcolor="#000000">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#000000" style="background:#000;">
 <tr><td align="center" style="padding:32px 16px 48px;">
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
 
-    <!-- Header -->
-    <tr><td style="padding:0 0 28px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-        <td>
-          <span style="font-size:24px;font-weight:900;letter-spacing:-1px;">
-            <span style="color:#fff;">fittry</span><span style="color:#B6FF3B;">be</span>
-          </span>
-        </td>
-      </tr></table>
+    <!-- Logo -->
+    <tr><td style="padding:0 0 32px;text-align:center;">
+      <span style="font-size:26px;font-weight:900;letter-spacing:-1px;">
+        <span style="color:#fff;">fittry</span><span style="color:#B6FF3B;">be</span>
+      </span>
     </td></tr>
 
-    <!-- Hero card -->
+    <!-- Main Card -->
     <tr><td>
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
-        style="background:#0A0A0A;border-radius:20px;border:1px solid #1A1A1A;overflow:hidden;">
+        style="background:#0A0A0A;border-radius:24px;border:1px solid #1E1E1E;overflow:hidden;">
 
+        <!-- Top accent -->
         <tr><td style="background:linear-gradient(90deg,#B6FF3B,#8AC82C);height:4px;font-size:0;">&nbsp;</td></tr>
 
-        <tr><td style="padding:36px 32px;text-align:center;">
-          <!-- Gift emoji with glow -->
-          <div style="width:80px;height:80px;margin:0 auto 20px;border-radius:20px;background:rgba(182,255,0,0.08);border:1px solid rgba(182,255,0,0.15);display:flex;align-items:center;justify-content:center;">
-            <span style="font-size:40px;display:block;text-align:center;line-height:80px;">🎁</span>
-          </div>
-
-          <p style="font-size:26px;font-weight:900;color:#fff;line-height:1.2;margin-bottom:8px;">
+        <!-- Hero -->
+        <tr><td style="padding:48px 40px 36px;text-align:center;">
+          <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+            <tr><td style="width:72px;height:72px;border-radius:18px;background:rgba(182,255,0,0.1);border:1px solid rgba(182,255,0,0.2);text-align:center;vertical-align:middle;">
+              <span style="font-size:36px;line-height:72px;">🎁</span>
+            </td></tr>
+          </table>
+          <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:rgba(255,255,255,0.4);margin-top:24px;margin-bottom:10px;">
+            Exclusive offer for you
+          </p>
+          <p style="font-size:32px;font-weight:900;color:#fff;line-height:1.15;margin-bottom:6px;">
             Your Next Session
           </p>
-          <p style="font-size:42px;font-weight:900;line-height:1;">
+          <p style="font-size:48px;font-weight:900;line-height:1;letter-spacing:-2px;">
             <span style="color:#B6FF3B;">Is FREE</span>
           </p>
         </td></tr>
 
-        <tr><td style="padding:0 32px;"><div style="height:1px;background:#1A1A1A;"></div></td></tr>
+        <!-- Divider -->
+        <tr><td style="padding:0 40px;"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-bottom:1px solid #1A1A1A;">&nbsp;</td></tr></table></td></tr>
 
-        <tr><td style="padding:28px 32px;">
-          <p style="font-size:15px;color:#ccc;line-height:1.8;margin-bottom:20px;">
-            Hey ${firstName},
+        <!-- Body -->
+        <tr><td style="padding:32px 40px;">
+          <p style="font-size:16px;color:#fff;font-weight:600;line-height:1.5;margin-bottom:16px;">
+            Hey ${firstName} ${emoji}
           </p>
-          <p style="font-size:14px;color:#999;line-height:1.8;margin-bottom:20px;">
-            Hope you enjoyed <strong style="color:#fff;">${data.sessionTitle}</strong> ${emoji}
+          <p style="font-size:14px;color:#888;line-height:1.8;margin-bottom:16px;">
+            Hope you had a great time at <strong style="color:#ccc;">${data.sessionTitle}</strong>.
           </p>
-          <p style="font-size:14px;color:#999;line-height:1.8;margin-bottom:20px;">
-            We built the FitTrybe app to make finding your next game even easier. Browse sessions near you, join with one tap, chat with other players, and get notified when new games pop up.
+          <p style="font-size:14px;color:#888;line-height:1.8;margin-bottom:24px;">
+            We built the FitTrybe app so you can find your next game even faster — browse sessions near you, join with one tap, and get notified the moment something new drops.
           </p>
-          <p style="font-size:15px;color:#fff;font-weight:700;line-height:1.8;margin-bottom:20px;">
-            Download the app and your next session is completely free — on us.
-          </p>
-        </td></tr>
 
-        <!-- How it works -->
-        <tr><td style="padding:0 32px 28px;">
+          <!-- Value prop card -->
           <table width="100%" cellpadding="0" cellspacing="0" border="0"
-            style="background:#080808;border-radius:14px;border:1px solid #141414;">
-            <tr><td style="padding:20px 24px;">
-              <p style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">
-                How to claim
+            style="background:#111;border-radius:16px;border:1px solid #1A1A1A;margin-bottom:28px;">
+            <tr><td style="padding:24px;">
+              <p style="font-size:18px;font-weight:800;color:#B6FF3B;margin-bottom:16px;text-align:center;">
+                Download the app → your next session is free
               </p>
-              <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
-                <tr><td style="padding:8px 0;">
-                  <table cellpadding="0" cellspacing="0" border="0"><tr>
-                    <td style="width:28px;vertical-align:top;">
-                      <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#B6FF3B;color:#000;font-size:11px;font-weight:800;text-align:center;line-height:22px;">1</span>
-                    </td>
-                    <td style="color:#bbb;font-size:13px;padding-left:8px;">Download FitTrybe from the App Store or Google Play</td>
-                  </tr></table>
-                </td></tr>
-                <tr><td style="padding:8px 0;">
-                  <table cellpadding="0" cellspacing="0" border="0"><tr>
-                    <td style="width:28px;vertical-align:top;">
-                      <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#B6FF3B;color:#000;font-size:11px;font-weight:800;text-align:center;line-height:22px;">2</span>
-                    </td>
-                    <td style="color:#bbb;font-size:13px;padding-left:8px;">Sign up with this email <span style="color:#B6FF3B;font-weight:600;">(${data.guestEmail})</span></td>
-                  </tr></table>
-                </td></tr>
-                <tr><td style="padding:8px 0;">
-                  <table cellpadding="0" cellspacing="0" border="0"><tr>
-                    <td style="width:28px;vertical-align:top;">
-                      <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#B6FF3B;color:#000;font-size:11px;font-weight:800;text-align:center;line-height:22px;">3</span>
-                    </td>
-                    <td style="color:#bbb;font-size:13px;padding-left:8px;">Join any session — the fee is <strong style="color:#B6FF3B;">waived automatically</strong></td>
-                  </tr></table>
-                </td></tr>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding:10px 0;vertical-align:top;width:36px;">
+                    <table cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td style="width:28px;height:28px;border-radius:50%;background:#B6FF3B;color:#000;font-size:12px;font-weight:800;text-align:center;line-height:28px;">1</td>
+                    </tr></table>
+                  </td>
+                  <td style="padding:10px 0 10px 12px;color:#ccc;font-size:13px;line-height:1.5;vertical-align:middle;">
+                    Download at <a href="https://fittrybe.app" style="color:#B6FF3B;font-weight:700;text-decoration:underline;text-underline-offset:3px;">fittrybe.app</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;vertical-align:top;width:36px;">
+                    <table cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td style="width:28px;height:28px;border-radius:50%;background:#B6FF3B;color:#000;font-size:12px;font-weight:800;text-align:center;line-height:28px;">2</td>
+                    </tr></table>
+                  </td>
+                  <td style="padding:10px 0 10px 12px;color:#ccc;font-size:13px;line-height:1.5;vertical-align:middle;">
+                    Sign up with <span style="color:#B6FF3B;font-weight:600;">${data.guestEmail}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;vertical-align:top;width:36px;">
+                    <table cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td style="width:28px;height:28px;border-radius:50%;background:#B6FF3B;color:#000;font-size:12px;font-weight:800;text-align:center;line-height:28px;">3</td>
+                    </tr></table>
+                  </td>
+                  <td style="padding:10px 0 10px 12px;color:#ccc;font-size:13px;line-height:1.5;vertical-align:middle;">
+                    Join any session — fee <strong style="color:#B6FF3B;">waived automatically</strong>
+                  </td>
+                </tr>
               </table>
             </td></tr>
           </table>
+
+          <!-- CTA -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td align="center">
+              <a href="https://fittrybe.app" style="display:inline-block;padding:16px 48px;background:#B6FF3B;color:#000;font-weight:800;font-size:15px;border-radius:50px;text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;">
+                Download Now
+              </a>
+            </td>
+          </tr></table>
         </td></tr>
 
-        <!-- CTA buttons -->
-        <tr><td style="padding:0 32px 32px;text-align:center;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td align="center" style="padding-bottom:10px;">
-                <a href="https://apps.apple.com/app/fittrybe/id6740083498" style="display:inline-block;padding:14px 32px;background:#B6FF3B;color:#000;font-weight:800;font-size:13px;border-radius:50px;text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;">
-                  Download for iPhone
-                </a>
-              </td>
-            </tr>
-            <tr>
-              <td align="center">
-                <a href="https://play.google.com/store/apps/details?id=com.fittrybe.app" style="display:inline-block;padding:14px 32px;background:#111;border:1px solid #333;color:#fff;font-weight:700;font-size:13px;border-radius:50px;text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;">
-                  Download for Android
-                </a>
-              </td>
-            </tr>
-          </table>
-        </td></tr>
-
+        <!-- Bottom accent -->
         <tr><td style="background:linear-gradient(90deg,#B6FF3B,#8AC82C);height:3px;font-size:0;">&nbsp;</td></tr>
       </table>
     </td></tr>
 
-    <!-- Personal note -->
-    <tr><td style="padding:28px 0;">
-      <p style="font-size:13px;color:#777;line-height:1.8;margin-bottom:16px;">
-        The web is great for discovering sessions, but the app is where the magic happens — live updates, group chat, instant notifications when sessions near you go live.
-      </p>
-      <p style="font-size:14px;color:#fff;font-weight:600;margin-top:16px;">
-        Francis<br/>
-        <span style="color:#555;font-size:12px;font-weight:400;">Founder, FitTrybe</span>
-      </p>
-      <p style="font-size:12px;color:#444;margin-top:8px;">
-        P.S. This offer doesn't expire. Take your time. But your next game is waiting ${emoji}
-      </p>
+    <!-- Personal sign-off -->
+    <tr><td style="padding:32px 8px 0;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+        style="background:#0A0A0A;border-radius:16px;border:1px solid #141414;padding:24px 28px;">
+        <tr><td style="padding:24px 28px;">
+          <p style="font-size:13px;color:#666;line-height:1.8;margin-bottom:20px;">
+            The app is where the magic happens — live updates, group chat, instant notifications when sessions near you go live.
+          </p>
+          <table cellpadding="0" cellspacing="0" border="0"><tr>
+            <td style="vertical-align:top;padding-right:12px;">
+              <table cellpadding="0" cellspacing="0" border="0"><tr>
+                <td style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(182,255,0,0.2),rgba(182,255,0,0.05));text-align:center;line-height:36px;font-size:14px;font-weight:800;color:#B6FF3B;">F</td>
+              </tr></table>
+            </td>
+            <td style="vertical-align:middle;">
+              <p style="font-size:14px;color:#fff;font-weight:700;margin:0;">Francis</p>
+              <p style="font-size:11px;color:#555;margin:2px 0 0;">Founder, FitTrybe</p>
+            </td>
+          </tr></table>
+          <p style="font-size:12px;color:#444;margin-top:16px;line-height:1.6;font-style:italic;">
+            P.S. This offer doesn't expire. Take your time. But your next game is waiting ${emoji}
+          </p>
+        </td></tr>
+      </table>
     </td></tr>
 
     <!-- Footer -->
-    <tr><td style="padding:20px 0 0;border-top:1px solid #0D0D0D;">
-      <p style="font-size:10px;color:#2A2A2A;line-height:1.7;">
+    <tr><td style="padding:24px 0 0;text-align:center;">
+      <p style="font-size:10px;color:#333;line-height:1.7;">
         You're receiving this because you reserved a spot on
-        <a href="https://fittrybe.co.uk" style="color:#333;">fittrybe.co.uk</a>.
-        Questions? <a href="mailto:hello@fittrybe.co.uk" style="color:#333;">hello@fittrybe.co.uk</a>
+        <a href="https://fittrybe.co.uk" style="color:#444;">fittrybe.co.uk</a> ·
+        <a href="mailto:hello@fittrybe.co.uk" style="color:#444;">hello@fittrybe.co.uk</a>
       </p>
     </td></tr>
 

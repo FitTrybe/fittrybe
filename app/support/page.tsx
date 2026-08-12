@@ -9,6 +9,7 @@
 import type { Metadata } from "next";
 import { seoConfig, buildOGImageUrl, buildCanonicalUrl } from "@/lib/seo-config";
 import { buildWebPageSchema, buildBreadcrumbSchema, buildGraphSchema } from "@/lib/structured-data";
+import SiteNav from "@/components/SiteNav";
 import SupportPageClient from "@/components/SupportPageClient";
 
 const PAGE_URL = buildCanonicalUrl("/support");
@@ -72,6 +73,7 @@ export default function SupportPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: pageJsonLd }} />
+      <SiteNav />
       <SupportPageClient />
     </>
   );
