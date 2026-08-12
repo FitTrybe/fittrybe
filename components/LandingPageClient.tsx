@@ -797,14 +797,17 @@ const BADGE_STYLES: Record<string, { bg: string; color: string; border: string }
 };
 
 function formatRelativeDay(isoString: string): string {
+  const TZ = "Europe/London";
   const date = new Date(isoString);
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const diff = Math.round((target.getTime() - today.getTime()) / 86400000);
+  const ukDate = date.toLocaleDateString("en-CA", { timeZone: TZ });
+  const ukToday = now.toLocaleDateString("en-CA", { timeZone: TZ });
+  const diff = Math.round(
+    (new Date(ukDate).getTime() - new Date(ukToday).getTime()) / 86400000
+  );
   if (diff === 0) return "Today";
   if (diff === 1) return "Tomorrow";
-  return date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  return date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: TZ });
 }
 
 function SessionCard({ event, index }: { event: SessionWithHost; index: number }) {
@@ -1859,7 +1862,7 @@ function BlogPreviewSection() {
   const formatDate = (raw: BlogPost["publishedAt"]) => {
     if (!raw) return "";
     const d = typeof raw === "string" ? new Date(raw) : new Date((raw as { seconds: number }).seconds * 1000);
-    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/London" });
   };
 
   return (

@@ -345,6 +345,7 @@ export function formatEventDate(isoString: string): string {
     year: "numeric",
     month: "short",
     day: "numeric",
+    timeZone: "Europe/London",
   });
 }
 
@@ -352,6 +353,7 @@ export function formatEventTime(isoString: string): string {
   return new Date(isoString).toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Europe/London",
   });
 }
 

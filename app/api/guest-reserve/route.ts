@@ -42,11 +42,12 @@ function isValidEmail(email: string): boolean {
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", {
     weekday: "short", year: "numeric", month: "short", day: "numeric",
+    timeZone: "Europe/London",
   });
 }
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" });
 }
 
 function formatPrice(pence: number): string {
