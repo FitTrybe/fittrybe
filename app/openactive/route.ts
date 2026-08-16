@@ -1,10 +1,17 @@
 // app/openactive/route.ts
 //
-// OpenActive Dataset Site — serves the JSON-LD discovery page
-// at https://fittrybe.co.uk/openactive so the OpenActive data
-// catalogue can index FitTrybe's RPDE feeds.
-
-import { NextResponse } from "next/server";
+// FitTrybe OpenActive Dataset Site.
+//
+// Served from Next.js rather than a Supabase Edge Function because Supabase
+// coerces any HTML body on *.supabase.co/functions/v1/* to text/plain and
+// wraps it in a "default-src 'none'; sandbox" CSP. The RPDE feeds stay on
+// Supabase, since those are JSON and are unaffected.
+//
+// Live at: https://fittrybe.co.uk/openactive
+//
+// Note: no trailing slash. A Next.js route handler serves /openactive and
+// 308-redirects /openactive/ to it, so @id and url must match the unslashed
+// form or the validator will follow a redirect and flag the mismatch.
 
 const DATASET_URL = "https://fittrybe.co.uk/openactive";
 const SESSION_SERIES_URL =
@@ -12,6 +19,9 @@ const SESSION_SERIES_URL =
 const SCHEDULED_SESSION_URL =
   "https://osyqifrnyhkfyrokfbsi.supabase.co/functions/v1/openactive-scheduled-sessions";
 const DISCUSSION_URL = "https://github.com/FitTrybe/fittrybe/issues";
+
+export const dynamic = "force-static";
+export const revalidate = 3600;
 
 const jsonLd = {
   "@context": ["https://schema.org/", "https://openactive.io/"],
@@ -66,12 +76,20 @@ const jsonLd = {
       url: "https://fittrybe.co.uk/icons/Icon-192.png",
     },
   },
-  datePublished: "2026-08-08T00:00:00+01:00",
-  dateModified: new Date().toISOString(),
+  // UTC with a trailing Z, matching the validator's own worked example.
+  datePublished: "2026-08-08T00:00:00Z",
+  dateModified: "2026-08-16T00:00:00Z",
+  // Optional but recommended by the validator. Swap in a wide hero photo of
+  // a real session if you have one; the 192px app icon is too small to work
+  // as a page background.
+  // backgroundImage: {
+  //   "@type": "ImageObject",
+  //   url: "https://fittrybe.co.uk/images/openactive-bg.jpg",
+  // },
   schemaVersion: "https://openactive.io/modelling-opportunity-data/2.0/",
 };
 
-function renderHtml(): string {
+function html(): string {
   const embedded = JSON.stringify(jsonLd, null, 2).replace(/</g, "\\u003c");
 
   return `<!DOCTYPE html>
@@ -80,6 +98,8 @@ function renderHtml(): string {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>FitTrybe OpenActive Dataset</title>
+<meta name="description" content="Open data about sport sessions published by FitTrybe, conforming to the OpenActive data standards." />
+<link rel="canonical" href="${DATASET_URL}" />
 <script type="application/ld+json">
 ${embedded}
 </script>
@@ -169,11 +189,12 @@ ${embedded}
 }
 
 export async function GET() {
-  return new NextResponse(renderHtml(), {
+  return new Response(html(), {
     status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, max-age=300",
+      "Cache-Control": "public, max-age=300, s-maxage=3600",
+      "Access-Control-Allow-Origin": "*",
     },
   });
 }
