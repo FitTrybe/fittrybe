@@ -370,6 +370,11 @@ const globalStyles = `
     .community-section-inner > div:first-child > div > div:nth-child(4) {
       justify-content: center !important;
     }
+    .community-cta-wrapper {
+      justify-content: center !important;
+      flex-direction: column !important;
+      align-items: center !important;
+    }
     .community-section-inner > div:last-child {
       min-height: auto;
       padding: 0 4vw 60px;
@@ -1642,7 +1647,7 @@ function CommunitySection() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
+              <div className="community-cta-wrapper" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
                 <SmartDownloadLink className="community-cta-btn" style={{
                   display: "inline-flex", alignItems: "center", gap: 10,
                   padding: "16px 32px", borderRadius: 14,
@@ -1665,14 +1670,15 @@ function CommunitySection() {
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 10,
                     padding: "16px 32px", borderRadius: 14,
-                    background: "#25D366", color: "#fff",
+                    background: "transparent", color: "#fff",
+                    border: "1px solid rgba(255,255,255,0.2)",
                     fontFamily: "var(--font-anton, 'Anton', sans-serif)",
                     fontSize: "0.95rem", fontWeight: 800, letterSpacing: "0.05em",
                     textTransform: "uppercase", textDecoration: "none",
                     transition: "all 0.3s ease",
                   }}
                 >
-                  <IconWhatsApp size={20} color="#fff" />
+                  <IconWhatsApp size={20} color="#B6FF00" />
                   Join Our Community
                 </a>
               </div>

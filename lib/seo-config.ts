@@ -103,7 +103,7 @@ export const seoConfig = {
   favicon: "/favicon.ico",
 
   // ─── Social Handles ─────────────────────────────────────────────────────────
-  twitterHandle: "@fittrybe",
+  twitterHandle: "",
 
   socialLinks: {
     whatsapp: "https://wa.me/447424159414",
