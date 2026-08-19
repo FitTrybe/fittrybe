@@ -32,6 +32,7 @@ const MID_DARK  = "#0D0D0D";
 const GREY      = "#6B7280";
 
 export async function GET(req: NextRequest) {
+  const origin = new URL(req.url).origin;
   const { searchParams } = new URL(req.url);
 
   // Hard truncation safeguards — without these, long event titles or venue
@@ -110,20 +111,14 @@ export async function GET(req: NextRequest) {
             zIndex: 2,
           }}
         >
-          {/* Logo wordmark — fitTry (white) + be (lemon) */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              fontSize: 44,
-              fontWeight: 800,
-              letterSpacing: "-0.02em",
-              lineHeight: 1,
-            }}
-          >
-            <span style={{ color: "#fff" }}>fitTry</span>
-            <span style={{ color: LIME, fontWeight: 900 }}>be</span>
-          </div>
+          {/* Logo */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${origin}/logo-horizontal-white.png`}
+            alt="Fittrybe"
+            height={44}
+            style={{ height: 44 }}
+          />
 
           {/* Spacer */}
           <div style={{ flex: 1 }} />

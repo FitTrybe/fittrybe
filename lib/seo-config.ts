@@ -106,9 +106,10 @@ export const seoConfig = {
   twitterHandle: "@fittrybe",
 
   socialLinks: {
-    twitter: "https://twitter.com/fittrybe",
-    instagram: "https://instagram.com/fittrybe",
-    tiktok: "https://tiktok.com/@fittrybe",
+    whatsapp: "https://wa.me/447424159414",
+    instagram: "https://www.instagram.com/fittrybe.uk/",
+    facebook: "https://www.facebook.com/fittrybe.uk",
+    tiktok: "https://www.tiktok.com/@fittrybe",
   },
 
   // ─── App Store Links ────────────────────────────────────────────────────────
@@ -129,6 +130,7 @@ export const seoConfig = {
   analytics: {
     ga4MeasurementId: process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID ?? "",
     metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "",
+    plausibleDomain: process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN ?? "",
   },
 
   // ─── Robots Defaults ────────────────────────────────────────────────────────

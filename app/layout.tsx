@@ -138,6 +138,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {seoConfig.analytics.ga4MeasurementId && (
           <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         )}
+        {seoConfig.analytics.plausibleDomain && (
+          <link rel="dns-prefetch" href="https://plausible.io" />
+        )}
       </head>
       <body>
         {children}
@@ -154,6 +157,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${seoConfig.analytics.ga4MeasurementId}',{anonymize_ip:true});`}
             </Script>
           </>
+        )}
+        {seoConfig.analytics.plausibleDomain && (
+          <Script
+            defer
+            data-domain={seoConfig.analytics.plausibleDomain}
+            src="https://plausible.io/js/script.js"
+            strategy="lazyOnload"
+          />
         )}
         {seoConfig.analytics.metaPixelId && (
           <>
