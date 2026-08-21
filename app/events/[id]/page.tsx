@@ -28,6 +28,7 @@ import {
   buildWebPageSchema,
 } from "@/lib/structured-data";
 import EventCard from "@/components/EventCard";
+import { SessionViewTracking } from "@/components/tracking/SessionViewTracking";
 
 export const revalidate = 60;
 
@@ -402,6 +403,12 @@ export default async function EventDetailPage({
       <main style={{ minHeight: "100vh", background: "#050505", color: "#fff", fontFamily: "var(--font-inter-tight)" }}>
         {/* Nav */}
         <SiteNav />
+
+        <SessionViewTracking
+          sessionId={event.id}
+          sessionName={event.title}
+          price={event.joinPricePence / 100}
+        />
 
         <article style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }} className="lg:py-12">
           {/* Breadcrumb */}

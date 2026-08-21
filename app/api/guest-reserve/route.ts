@@ -20,6 +20,7 @@ import { buildHostNotifyEmail } from "@/lib/guest-host-notify-email";
 import { buildGuestReminderEmail } from "@/lib/guest-reminder-email";
 import { Resend } from "resend";
 import crypto from "crypto";
+import { sendPurchaseToMeta } from "@/lib/meta-capi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -179,10 +180,12 @@ async function sendAllEmails(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { sessionId, name, email } = body as {
+    const { sessionId, name, email, fbp, fbc } = body as {
       sessionId?: string;
       name?: string;
       email?: string;
+      fbp?: string;
+      fbc?: string;
     };
 
     if (!sessionId || typeof sessionId !== "string") {
@@ -268,7 +271,7 @@ export async function POST(req: NextRequest) {
           avatar_seed: avatarSeed,
           session_title: session.title,
           session_location: session.place_name || session.location_area,
-          success_url: `${siteUrl}/guest-reserve/success?session_id=${sessionId}&name=${encodeURIComponent(trimmedName)}&email=${encodeURIComponent(trimmedEmail)}&avatar=${avatarSeed}`,
+          success_url: `${siteUrl}/guest-reserve/success?session_id=${sessionId}&name=${encodeURIComponent(trimmedName)}&email=${encodeURIComponent(trimmedEmail)}&avatar=${avatarSeed}${fbp ? `&fbp=${encodeURIComponent(fbp)}` : ""}${fbc ? `&fbc=${encodeURIComponent(fbc)}` : ""}`,
           cancel_url: `${siteUrl}/events/${sessionId}?cancelled=1`,
         }),
       });
@@ -335,7 +338,25 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 5. Send all emails (ticket, host notify, reminder, follow-up) — non-blocking
+      // 5. Server-side Purchase event for Meta CAPI (free sessions)
+      const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || req.headers.get("x-real-ip") || undefined;
+      const userAgent = req.headers.get("user-agent") || undefined;
+      const bookingId = `${sessionId}_${trimmedEmail}`;
+      sendPurchaseToMeta({
+        bookingId,
+        sessionId,
+        sessionName: session.title,
+        amountPaid: 0,
+        email: trimmedEmail,
+        firstName: trimmedName.split(" ")[0] || trimmedName,
+        lastName: trimmedName.split(" ").slice(1).join(" ") || undefined,
+        clientIp,
+        userAgent,
+        fbp: fbp || req.cookies.get("_fbp")?.value,
+        fbc: fbc || req.cookies.get("_fbc")?.value,
+      }).catch((err) => console.error("[guest-reserve] Meta CAPI Purchase failed:", err));
+
+      // 6. Send all emails (ticket, host notify, reminder, follow-up) — non-blocking
       sendAllEmails(
         {
           guestName: trimmedName,

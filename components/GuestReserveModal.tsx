@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { sportEmoji } from "@/lib/events";
+import { fbTrack, readMetaCookies } from "@/lib/fbq";
 
 interface SessionInfo {
   id: string;
@@ -78,6 +79,20 @@ export default function GuestReserveModal({
   async function handleConfirm() {
     setLoading(true);
     setError("");
+
+    // Fire InitiateCheckout before sending to payment
+    fbTrack('InitiateCheckout', {
+      content_ids: [session.id],
+      content_name: session.title,
+      content_type: 'product',
+      value: session.joinPricePence / 100,
+      currency: 'GBP',
+      num_items: 1,
+    });
+
+    // Capture Meta cookies so the server event can use them for deduplication
+    const { fbp, fbc } = readMetaCookies();
+
     try {
       const res = await fetch("/api/guest-reserve", {
         method: "POST",
@@ -86,6 +101,8 @@ export default function GuestReserveModal({
           sessionId: session.id,
           name: name.trim(),
           email: email.trim().toLowerCase(),
+          fbp,
+          fbc,
         }),
       });
       const data = await res.json();
