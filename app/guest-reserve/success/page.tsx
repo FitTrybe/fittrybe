@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { cookies, headers } from "next/headers";
+import Stripe from "stripe";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { buildGuestTicketEmail } from "@/lib/guest-ticket-email";
 import { buildGuestFollowupEmail } from "@/lib/guest-followup-email";
-import { sendPurchaseToMeta } from "@/lib/meta-capi";
+import { sendPurchaseToMeta, hashBookingId } from "@/lib/meta-capi";
+import { decryptBookingToken } from "@/lib/booking-token";
 import { Resend } from "resend";
 import {
   formatEventDate,
@@ -30,7 +32,6 @@ async function confirmPaidGuest(
   guestName: string,
   guestEmail: string,
   avatarSeed: string,
-  trackingParams?: { clientIp?: string; userAgent?: string; fbp?: string; fbc?: string },
 ) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -62,24 +63,6 @@ async function confirmPaidGuest(
     .single();
 
   if (!session) return;
-
-  // Server-side Purchase event for Meta CAPI
-  const pricePounds = (session.join_price_pence ?? 0) / 100;
-  const bookingId = `${sessionId}_${guestEmail}`;
-  const nameParts = guestName.split(" ");
-  await sendPurchaseToMeta({
-    bookingId,
-    sessionId,
-    sessionName: session.title,
-    amountPaid: pricePounds,
-    email: guestEmail,
-    firstName: nameParts[0] || guestName,
-    lastName: nameParts.slice(1).join(" ") || undefined,
-    clientIp: trackingParams?.clientIp,
-    userAgent: trackingParams?.userAgent,
-    fbp: trackingParams?.fbp,
-    fbc: trackingParams?.fbc,
-  }).catch((err) => console.error("[guest-reserve/success] Meta CAPI Purchase failed:", err));
 
   // Send ticket email + follow-up + add to audience
   const resendKey = process.env.RESEND_API_KEY;
@@ -138,31 +121,90 @@ async function confirmPaidGuest(
   }
 }
 
+/**
+ * Retrieve the actual amount charged from Stripe Checkout, so TRYBE10 and
+ * other discount codes are reflected correctly in the Purchase event.
+ * Returns amount in pounds (e.g. 8.07), or null if lookup fails.
+ */
+async function getStripeAmountPaid(checkoutSessionId: string): Promise<number | null> {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey || !checkoutSessionId) return null;
+
+  try {
+    const stripe = new Stripe(secretKey);
+    const session = await stripe.checkout.sessions.retrieve(checkoutSessionId);
+    if (typeof session.amount_total === "number") {
+      return session.amount_total / 100; // Stripe stores in pence
+    }
+    return null;
+  } catch (e) {
+    console.error("[guest-reserve/success] Stripe session lookup failed:", e);
+    return null;
+  }
+}
+
 export default async function GuestReserveSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string; name?: string; email?: string; avatar?: string; fbp?: string; fbc?: string }>;
+  searchParams: Promise<{
+    // New params (encrypted token + Stripe checkout session ID)
+    session_id?: string; avatar?: string; t?: string; cs?: string;
+    // Legacy params (kept for backwards compat with any in-flight checkouts)
+    name?: string; email?: string;
+  }>;
 }) {
-  const { session_id, name, email, avatar, fbp: qsFbp, fbc: qsFbc } = await searchParams;
+  const { session_id, avatar, t, cs, name: legacyName, email: legacyEmail } = await searchParams;
 
-  // Capture tracking context from the incoming request
+  // Decrypt guest details from the opaque token. Fall back to legacy URL
+  // params for any checkout sessions that were created before this deploy.
+  const guest = t ? decryptBookingToken(t) : null;
+  const guestName = guest?.name || legacyName;
+  const guestEmail = guest?.email || legacyEmail;
+
+  // Capture tracking context from the incoming request (cookies, not URL params)
   const cookieStore = await cookies();
   const headerStore = await headers();
   const trackingParams = {
     clientIp: headerStore.get("x-forwarded-for")?.split(",")[0].trim() || headerStore.get("x-real-ip") || undefined,
     userAgent: headerStore.get("user-agent") || undefined,
-    fbp: cookieStore.get("_fbp")?.value || qsFbp,
-    fbc: cookieStore.get("_fbc")?.value || qsFbc,
+    fbp: cookieStore.get("_fbp")?.value,
+    fbc: cookieStore.get("_fbc")?.value,
   };
 
   // For paid sessions — confirm booking via edge function + send emails
-  if (session_id && name && email) {
-    await confirmPaidGuest(session_id, name, email, avatar || session_id.slice(0, 12), trackingParams);
+  if (session_id && guestName && guestEmail) {
+    await confirmPaidGuest(session_id, guestName, guestEmail, avatar || session_id.slice(0, 12));
   }
 
   const event = session_id ? await getEventById(session_id) : null;
-  const bookingId = session_id && email ? `${session_id}_${email}` : undefined;
-  const amountPaid = event ? (event.joinPricePence ?? 0) / 100 : 0;
+
+  // Get the actual amount charged from Stripe (reflects TRYBE10 and other discounts).
+  // Falls back to the session list price if Stripe lookup fails.
+  const stripeAmount = cs ? await getStripeAmountPaid(cs) : null;
+  const amountPaid = stripeAmount ?? (event ? (event.joinPricePence ?? 0) / 100 : 0);
+
+  // Hashed booking id — no PII, matches the server CAPI event_id
+  const bookingId = session_id && guestEmail
+    ? hashBookingId(session_id, guestEmail)
+    : undefined;
+
+  // Server-side Purchase event for Meta CAPI
+  if (bookingId && session_id && guestEmail && event) {
+    const nameParts = (guestName || "").split(" ");
+    await sendPurchaseToMeta({
+      bookingId,
+      sessionId: session_id,
+      sessionName: event.title,
+      value: amountPaid,
+      email: guestEmail,
+      firstName: nameParts[0] || guestName || undefined,
+      lastName: nameParts.slice(1).join(" ") || undefined,
+      clientIp: trackingParams.clientIp,
+      userAgent: trackingParams.userAgent,
+      fbp: trackingParams.fbp,
+      fbc: trackingParams.fbc,
+    }).catch((err) => console.error("[guest-reserve/success] Meta CAPI Purchase failed:", err));
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "#050505", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>

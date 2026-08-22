@@ -20,7 +20,8 @@ import { buildHostNotifyEmail } from "@/lib/guest-host-notify-email";
 import { buildGuestReminderEmail } from "@/lib/guest-reminder-email";
 import { Resend } from "resend";
 import crypto from "crypto";
-import { sendPurchaseToMeta } from "@/lib/meta-capi";
+import { sendCompleteRegistrationToMeta, hashBookingId } from "@/lib/meta-capi";
+import { encryptBookingToken } from "@/lib/booking-token";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -255,6 +256,10 @@ export async function POST(req: NextRequest) {
 
       const siteUrl = getSiteUrl(req);
 
+      // Encrypt guest PII into an opaque token so the success URL (which Meta
+      // records in PageView) never carries plaintext name or email.
+      const bookingToken = encryptBookingToken({ name: trimmedName, email: trimmedEmail });
+
       const stripeRes = await fetch(`${supabaseUrl}/functions/v1/guest-web-booking`, {
         method: "POST",
         headers: {
@@ -271,7 +276,7 @@ export async function POST(req: NextRequest) {
           avatar_seed: avatarSeed,
           session_title: session.title,
           session_location: session.place_name || session.location_area,
-          success_url: `${siteUrl}/guest-reserve/success?session_id=${sessionId}&name=${encodeURIComponent(trimmedName)}&email=${encodeURIComponent(trimmedEmail)}&avatar=${avatarSeed}${fbp ? `&fbp=${encodeURIComponent(fbp)}` : ""}${fbc ? `&fbc=${encodeURIComponent(fbc)}` : ""}`,
+          success_url: `${siteUrl}/guest-reserve/success?session_id=${sessionId}&avatar=${avatarSeed}&t=${encodeURIComponent(bookingToken)}&cs={CHECKOUT_SESSION_ID}`,
           cancel_url: `${siteUrl}/events/${sessionId}?cancelled=1`,
         }),
       });
@@ -338,15 +343,15 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 5. Server-side Purchase event for Meta CAPI (free sessions)
+      // 5. Server-side CompleteRegistration for Meta CAPI (free sessions — not Purchase)
       const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || req.headers.get("x-real-ip") || undefined;
       const userAgent = req.headers.get("user-agent") || undefined;
-      const bookingId = `${sessionId}_${trimmedEmail}`;
-      sendPurchaseToMeta({
+      const bookingId = hashBookingId(sessionId, trimmedEmail);
+      sendCompleteRegistrationToMeta({
         bookingId,
         sessionId,
         sessionName: session.title,
-        amountPaid: 0,
+        value: 0,
         email: trimmedEmail,
         firstName: trimmedName.split(" ")[0] || trimmedName,
         lastName: trimmedName.split(" ").slice(1).join(" ") || undefined,
@@ -354,7 +359,7 @@ export async function POST(req: NextRequest) {
         userAgent,
         fbp: fbp || req.cookies.get("_fbp")?.value,
         fbc: fbc || req.cookies.get("_fbc")?.value,
-      }).catch((err) => console.error("[guest-reserve] Meta CAPI Purchase failed:", err));
+      }).catch((err) => console.error("[guest-reserve] Meta CAPI CompleteRegistration failed:", err));
 
       // 6. Send all emails (ticket, host notify, reminder, follow-up) — non-blocking
       sendAllEmails(
@@ -376,7 +381,7 @@ export async function POST(req: NextRequest) {
         Math.max(0, session.spots_left - 1),
       ).catch(() => {});
 
-      return NextResponse.json({ success: true }, { status: 200 });
+      return NextResponse.json({ success: true, bookingId }, { status: 200 });
     }
   } catch (err) {
     const message =

@@ -407,7 +407,7 @@ export default async function EventDetailPage({
         <SessionViewTracking
           sessionId={event.id}
           sessionName={event.title}
-          price={event.joinPricePence / 100}
+          price={(event.joinPricePence ?? 0) / 100}
         />
 
         <article style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }} className="lg:py-12">

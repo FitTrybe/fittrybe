@@ -1,12 +1,11 @@
-// Server side Purchase for Meta, sent straight from your backend.
+// Server-side events for Meta Conversions API.
+//
 // Ad blockers and iOS eat a real share of browser events, so this is the
 // reliable half. The browser event and this one share an event_id, so Meta
-// counts one purchase, not two.
+// counts one conversion, not two.
 //
 // Requires an env var on the server only. Never expose this in client code:
 //   META_CAPI_TOKEN=...
-// Get it from Events Manager > Waitlist Signup > Settings > Conversions API
-// > Set up direct integration > Generate access token.
 
 import crypto from 'crypto'
 
@@ -16,30 +15,42 @@ const GRAPH_VERSION = 'v21.0'
 const sha256 = (value: string): string =>
   crypto.createHash('sha256').update(value.trim().toLowerCase()).digest('hex')
 
-export type PurchaseEvent = {
+/**
+ * Deterministic, PII-free booking id for event deduplication.
+ * Pass the same value as eventID in the browser and as event_id on the server.
+ */
+export function hashBookingId(sessionId: string, email: string): string {
+  return crypto
+    .createHash('sha256')
+    .update(`${sessionId}:${email.trim().toLowerCase()}`)
+    .digest('hex')
+    .slice(0, 16)
+}
+
+export type ServerEventData = {
   /** Same id you pass as eventID in the browser. This is what dedupes them. */
   bookingId: string
   sessionId: string
   sessionName: string
   /** Amount actually charged, after any discount code. */
-  amountPaid: number
+  value: number
   email: string
-  /** Optional but they raise your match quality a lot. */
   phone?: string
   firstName?: string
   lastName?: string
-  /** The buyer's IP and user agent from the original request. */
   clientIp?: string
   userAgent?: string
-  /** _fbp and _fbc cookies captured in the browser at checkout. */
   fbp?: string
   fbc?: string
 }
 
-export async function sendPurchaseToMeta(e: PurchaseEvent): Promise<void> {
+async function sendServerEvent(
+  eventName: string,
+  e: ServerEventData,
+): Promise<void> {
   const token = process.env.META_CAPI_TOKEN
   if (!token) {
-    console.warn('[meta-capi] META_CAPI_TOKEN not set, skipping Purchase')
+    console.warn(`[meta-capi] META_CAPI_TOKEN not set, skipping ${eventName}`)
     return
   }
 
@@ -58,7 +69,7 @@ export async function sendPurchaseToMeta(e: PurchaseEvent): Promise<void> {
   const body = {
     data: [
       {
-        event_name: 'Purchase',
+        event_name: eventName,
         event_time: Math.floor(Date.now() / 1000),
         event_id: e.bookingId,
         action_source: 'website',
@@ -66,7 +77,7 @@ export async function sendPurchaseToMeta(e: PurchaseEvent): Promise<void> {
         user_data: userData,
         custom_data: {
           currency: 'GBP',
-          value: e.amountPaid,
+          value: e.value,
           content_ids: [e.sessionId],
           content_name: e.sessionName,
           content_type: 'product',
@@ -87,10 +98,19 @@ export async function sendPurchaseToMeta(e: PurchaseEvent): Promise<void> {
     )
 
     if (!res.ok) {
-      console.error('[meta-capi] Purchase rejected:', res.status, await res.text())
+      console.error(`[meta-capi] ${eventName} rejected:`, res.status, await res.text())
     }
   } catch (err) {
-    // Never let tracking fail a booking.
-    console.error('[meta-capi] Purchase failed to send:', err)
+    console.error(`[meta-capi] ${eventName} failed to send:`, err)
   }
+}
+
+/** Paid booking completed. Value = what was actually charged after discounts. */
+export async function sendPurchaseToMeta(e: ServerEventData): Promise<void> {
+  return sendServerEvent('Purchase', e)
+}
+
+/** Free booking completed. Value = 0. */
+export async function sendCompleteRegistrationToMeta(e: ServerEventData): Promise<void> {
+  return sendServerEvent('CompleteRegistration', e)
 }

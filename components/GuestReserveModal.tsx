@@ -112,7 +112,17 @@ export default function GuestReserveModal({
         // Paid session — redirect to Stripe Checkout
         window.location.href = data.url;
       } else {
-        // Free session — show success
+        // Free session — show success + fire CompleteRegistration (not Purchase)
+        if (data.bookingId) {
+          fbTrack('CompleteRegistration', {
+            content_ids: [session.id],
+            content_name: session.title,
+            content_type: 'product',
+            value: 0,
+            currency: 'GBP',
+            num_items: 1,
+          }, data.bookingId);
+        }
         setStep("success");
         setLoading(false);
       }
