@@ -9,7 +9,7 @@
 
 import crypto from 'crypto'
 
-const PIXEL_ID = '1461832162343936'
+const PIXEL_ID = '1584673749455819'
 const GRAPH_VERSION = 'v21.0'
 
 const sha256 = (value: string): string =>

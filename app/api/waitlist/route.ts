@@ -10,7 +10,7 @@
  * Required env vars:
  *   RESEND_API_KEY          — from resend.com dashboard
  *   RESEND_FROM_EMAIL       — e.g. "Fittrybe <hello@fittrybe.co.uk>"  (must be a verified domain)
- *   META_PIXEL_ID           — Meta Pixel ID (1461832162343936)
+ *   META_PIXEL_ID           — Meta Pixel ID (1584673749455819)
  *   META_CAPI_ACCESS_TOKEN  — Generated from Events Manager → Settings → Conversions API
  *   META_CAPI_TEST_EVENT_CODE — Optional: for testing only (remove in production)
  */
